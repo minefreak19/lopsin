@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 15, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 16, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
 
@@ -25,6 +25,7 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_JMP]           = "jmp",
     [LOPSIN_INST_CJMP]          = "cjmp",
     [LOPSIN_INST_RJMP]          = "rjmp",
+    [LOPSIN_INST_CRJMP]         = "crjmp",
 
     [LOPSIN_INST_DUMP]          = "dump",
     [LOPSIN_INST_PUTC]          = "putc",
@@ -60,7 +61,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 15, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 16, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     if (vm->ip >= vm->program_sz) {
         return ERR_BAD_INST_PTR;
     }
@@ -178,6 +179,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_RJMP: {
+        vm->ip += inst.operand;
+    } break;
+
+    case LOPSIN_INST_CRJMP: {
         if (vm->stack[vm->sp - 1]) {
             vm->ip += inst.operand;
         } else {
