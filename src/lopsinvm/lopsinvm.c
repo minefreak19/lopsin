@@ -171,6 +171,9 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_CJMP: {
+        if (vm->sp <= 0) {
+            return ERR_STACK_UNDERFLOW;
+        }
         if (vm->stack[vm->sp - 1]) {
             vm->ip = inst.operand;
         } else {
@@ -183,6 +186,9 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_CRJMP: {
+        if (vm->sp <= 0) {
+            return ERR_STACK_UNDERFLOW;
+        }
         if (vm->stack[vm->sp - 1]) {
             vm->ip += inst.operand;
         } else {
@@ -191,11 +197,17 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_DUMP: {
+        if (vm->sp <= 0) {
+            return ERR_STACK_UNDERFLOW;
+        }
         printf("%"PRId64"\n", vm->stack[--vm->sp]);
         vm->ip++;
     } break;
 
     case LOPSIN_INST_PUTC: {
+        if (vm->sp <= 0) {
+            return ERR_STACK_UNDERFLOW;
+        }
         printf("%c", (char) vm->stack[--vm->sp]);
         vm->ip++;
     } break;
