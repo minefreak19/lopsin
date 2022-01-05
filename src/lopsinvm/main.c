@@ -8,24 +8,32 @@
 #define LOPSINVM_STACK_CAP 1024 
 
 LopsinInst program[] = {
-    MAKE_INST(PUSH, 0),
-    MAKE_INST(PUSH, '\n'),
-    MAKE_INST(PUSH, '!'),
-    MAKE_INST(PUSH, 'd'),
-    MAKE_INST(PUSH, 'l'),
-    MAKE_INST(PUSH, 'r'),
-    MAKE_INST(PUSH, 'o'),
-    MAKE_INST(PUSH, 'W'),
-    MAKE_INST(PUSH, ' '),
-    MAKE_INST(PUSH, ','),
-    MAKE_INST(PUSH, 'o'),
-    MAKE_INST(PUSH, 'l'),
-    MAKE_INST(PUSH, 'l'),
-    MAKE_INST(PUSH, 'e'),
-    MAKE_INST(PUSH, 'H'),
-
+    MAKE_INST(PUSH, 10),
+    MAKE_INST(PUSH, 15),
+    MAKE_INST(GT,   0),
+    MAKE_INST(CRJMP, 3),
+    MAKE_INST(PUSH, 'n'),
     MAKE_INST(PUTC, 0),
-    MAKE_INST(CRJMP, -1),
+    MAKE_INST(PUSH, 'Y'),
+    MAKE_INST(PUTC, 0),
+
+    // MAKE_INST(PUSH, '\n'),
+    // MAKE_INST(PUSH, '!'),
+    // MAKE_INST(PUSH, 'd'),
+    // MAKE_INST(PUSH, 'l'),
+    // MAKE_INST(PUSH, 'r'),
+    // MAKE_INST(PUSH, 'o'),
+    // MAKE_INST(PUSH, 'W'),
+    // MAKE_INST(PUSH, ' '),
+    // MAKE_INST(PUSH, ','),
+    // MAKE_INST(PUSH, 'o'),
+    // MAKE_INST(PUSH, 'l'),
+    // MAKE_INST(PUSH, 'l'),
+    // MAKE_INST(PUSH, 'e'),
+    // MAKE_INST(PUSH, 'H'),
+
+    // MAKE_INST(PUTC, 0),
+    // MAKE_INST(CRJMP, -1),
 };
 
 int main(int argc, const char **argv)
