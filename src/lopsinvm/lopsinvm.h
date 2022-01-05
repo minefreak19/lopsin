@@ -49,6 +49,7 @@ typedef enum {
     LOPSIN_INST_RJMP,
     
     LOPSIN_INST_DUMP,
+    LOPSIN_INST_PUTC,
 
     COUNT_LOPSIN_INST_TYPES
 } LopsinInstType;
