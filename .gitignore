@@ -1,0 +1,9 @@
+# editor stuff
+.vscode/
+
+# nobuild build system
+nobuild
+nobuild.old
+
+# binaries
+bin/
