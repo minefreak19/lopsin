@@ -24,6 +24,7 @@ typedef enum {
 
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
+    ERR_HALTED,
 
     ERR_DIV_BY_ZERO,
 
@@ -32,6 +33,7 @@ typedef enum {
 
 typedef enum {
     LOPSIN_INST_NOP = 0,
+    LOPSIN_INST_HLT,
 
     LOPSIN_INST_PUSH,
     LOPSIN_INST_DROP,
@@ -78,6 +80,7 @@ typedef struct {
     size_t ip;
 
     bool debug_mode;
+    bool running;
 } LopsinVM;
 
 #define ERR_AS_CSTR(err) (LOPSIN_ERR_NAMES[err])
@@ -88,6 +91,7 @@ extern const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES];
 extern const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS];
 
 LopsinErr lopsinvm_run_inst(LopsinVM *);
+LopsinErr lopsinvm_start(LopsinVM *);
 
 #ifdef __cplusplus
 }

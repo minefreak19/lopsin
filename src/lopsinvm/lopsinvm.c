@@ -7,9 +7,10 @@
 
 #include "util.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 22, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 23, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
+    [LOPSIN_INST_HLT]           = "hlt",
 
     [LOPSIN_INST_PUSH]          = "push",
     [LOPSIN_INST_DROP]          = "drop",
@@ -38,7 +39,7 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_PUTC]          = "putc",
 };
 
-static_assert(COUNT_LOPSIN_ERRS == 6, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
+static_assert(COUNT_LOPSIN_ERRS == 7, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
 const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_OK]              = "OK",
 
@@ -47,6 +48,7 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
 
     [ERR_ILLEGAL_INST]    = "Illegal instruction",
     [ERR_BAD_INST_PTR]    = "Bad instruction pointer",
+    [ERR_HALTED]          = "Already halted",
 
     [ERR_DIV_BY_ZERO]     = "Division by zero",
 };
@@ -68,7 +70,12 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 22, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 23, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    
+    if (!vm->running) {
+        return ERR_HALTED;
+    }
+
     if (vm->ip >= vm->program_sz) {
         return ERR_BAD_INST_PTR;
     }
@@ -86,6 +93,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     
     case LOPSIN_INST_NOP: {
         vm->ip++;
+    } break;
+
+    case LOPSIN_INST_HLT: {
+        vm->running = false;
     } break;
 
     case LOPSIN_INST_PUSH: {
@@ -273,4 +284,21 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     }
     
     return ERR_OK;
+}
+
+LopsinErr lopsinvm_start(LopsinVM *vm)
+{
+    LopsinErr err = 0;
+
+    vm->running = true;
+
+    while (vm->running) {
+        err = lopsinvm_run_inst(vm);
+        if (err) {
+            fprintf(stderr, "ERROR: At inst %zu: %s\n", vm->ip, ERR_AS_CSTR(err));
+            vm->running = false;
+        }
+    }
+
+    return err;
 }

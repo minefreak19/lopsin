@@ -10,12 +10,14 @@
 LopsinInst program[] = {
     MAKE_INST(PUSH, 10),
     MAKE_INST(PUSH, 15),
-    MAKE_INST(GT,   0),
-    MAKE_INST(CRJMP, 3),
+    MAKE_INST(LT,   0),
+    MAKE_INST(CRJMP, 4),
     MAKE_INST(PUSH, 'n'),
     MAKE_INST(PUTC, 0),
+    MAKE_INST(HLT,  0),
     MAKE_INST(PUSH, 'Y'),
     MAKE_INST(PUTC, 0),
+    MAKE_INST(HLT,  0),
 
     // MAKE_INST(PUSH, '\n'),
     // MAKE_INST(PUSH, '!'),
@@ -55,14 +57,7 @@ int main(int argc, const char **argv)
         .debug_mode = false,
     };
 
-    LopsinErr err = 0;
+    lopsinvm_start(&vm);
 
-    while (vm.ip < vm.program_sz) {
-        err = lopsinvm_run_inst(&vm);
-        if (err) {
-            fprintf(stderr, "ERROR: At inst %zu: %s\n", vm.ip, ERR_AS_CSTR(err));
-            return 1;
-        }
-    }
     return 0;
 }
