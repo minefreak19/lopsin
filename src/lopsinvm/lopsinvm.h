@@ -46,6 +46,7 @@ typedef enum {
 
     LOPSIN_INST_JMP,
     LOPSIN_INST_CJMP,
+    LOPSIN_INST_RJMP,
     
     LOPSIN_INST_DUMP,
 

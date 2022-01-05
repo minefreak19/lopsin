@@ -22,7 +22,7 @@ LopsinInst program[] = {
 
     MAKE_INST(SWAP, 0),
 
-    MAKE_INST(CJMP, 2),
+    MAKE_INST(RJMP, -6),
     MAKE_INST(DROP, 0),
     MAKE_INST(DUMP, 0),
 };

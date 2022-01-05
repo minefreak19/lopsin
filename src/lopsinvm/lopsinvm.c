@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 13, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 14, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
 
@@ -24,7 +24,8 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
 
     [LOPSIN_INST_JMP]           = "jmp",
     [LOPSIN_INST_CJMP]          = "cjmp",
-    
+    [LOPSIN_INST_RJMP]          = "rjmp",
+
     [LOPSIN_INST_DUMP]          = "dump",
 };
 
@@ -54,22 +55,11 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
     for (size_t i = 0; i < vm->sp; i++) {
         fprintf(stream, "\t%"PRId64"\n", vm->stack[i]);
     }
-    
-
-    // typedef struct {
-    //     LopsinValue *stack;
-    //     size_t stack_cap;
-    //     size_t sp;
-
-    //     LopsinInst *program;
-    //     size_t program_sz;
-
-    //     size_t ip;
-    // } LopsinVM;
 }
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
+    static_assert(COUNT_LOPSIN_INST_TYPES == 14, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     if (vm->ip >= vm->program_sz) {
         return ERR_BAD_INST_PTR;
     }
@@ -186,6 +176,14 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     case LOPSIN_INST_CJMP: {
         if (vm->stack[vm->sp - 1]) {
             vm->ip = inst.operand;
+        } else {
+            vm->ip++;
+        }
+    } break;
+
+    case LOPSIN_INST_RJMP: {
+        if (vm->stack[vm->sp - 1]) {
+            vm->ip += inst.operand;
         } else {
             vm->ip++;
         }
