@@ -16,24 +16,24 @@ extern "C"
 
 #define DEFAULT_BUFFER_CAP 1024
 
+#ifndef BUFFERDEF
+# define BUFFERDEF
+#endif
+
 typedef struct Buffer {
     char *data;
     size_t size;
     size_t cap;
 } Buffer;
 
-Buffer *new_buffer(size_t cap);
-
-void buffer_clear(Buffer *);
-void buffer_free(Buffer *);
-
-void buffer_append_char(Buffer *, char);
-void buffer_append_str(Buffer *, const char *str, size_t len);
-void buffer_append_cstr(Buffer *, const char *cstr);
-
-void buffer_append_fmt(Buffer *, const char *format, ...) PRINTF_FORMAT(2, 3);
-
-void buffer_rewind(Buffer *, size_t prev_sz);
+BUFFERDEF Buffer *new_buffer(size_t cap);
+BUFFERDEF void buffer_clear(Buffer *);
+BUFFERDEF void buffer_free(Buffer *);
+BUFFERDEF void buffer_append_char(Buffer *, char);
+BUFFERDEF void buffer_append_str(Buffer *, const char *str, size_t len);
+BUFFERDEF void buffer_append_cstr(Buffer *, const char *cstr);
+BUFFERDEF void buffer_append_fmt(Buffer *, const char *format, ...) PRINTF_FORMAT(2, 3);
+BUFFERDEF void buffer_rewind(Buffer *, size_t prev_sz);
 
 #ifdef __cplusplus
 }
@@ -60,7 +60,7 @@ static void buffer_ensure(Buffer *buf, size_t req)
     buf->data = NOTNULL(realloc(buf->data, req));
 }
 
-Buffer *new_buffer(size_t cap)
+BUFFERDEF Buffer *new_buffer(size_t cap)
 {
     if (cap == 0) cap = DEFAULT_TMP_BUF_CAP;
 
@@ -75,13 +75,13 @@ Buffer *new_buffer(size_t cap)
     return result;
 }
 
-void buffer_clear(Buffer *buf) 
+BUFFERDEF void buffer_clear(Buffer *buf) 
 {
     assert(buf != NULL);
     buf->size = 0;
 }
 
-void buffer_free(Buffer *buf)
+BUFFERDEF void buffer_free(Buffer *buf)
 {
     assert(buf != NULL);
 
@@ -93,13 +93,13 @@ void buffer_free(Buffer *buf)
     free(buf);
 }
 
-void buffer_append_char(Buffer *buf, char c)
+BUFFERDEF void buffer_append_char(Buffer *buf, char c)
 {
     buffer_ensure(buf, buf->size + 1);
     buf->data[buf->size++] = c;
 }
 
-void buffer_append_str(Buffer *buf, const char *str, size_t len)
+BUFFERDEF void buffer_append_str(Buffer *buf, const char *str, size_t len)
 {
     assert(str != NULL);
     assert(buf != NULL);
@@ -112,13 +112,13 @@ void buffer_append_str(Buffer *buf, const char *str, size_t len)
     buf->size += len;
 }
 
-void buffer_append_cstr(Buffer *buf, const char *cstr)
+BUFFERDEF void buffer_append_cstr(Buffer *buf, const char *cstr)
 {
     assert(cstr != NULL);
     buffer_append_str(buf, cstr, strlen(cstr));
 }
 
-void buffer_append_fmt(Buffer *buf, const char *format, ...)
+BUFFERDEF void buffer_append_fmt(Buffer *buf, const char *format, ...)
 {
     assert(buf != NULL);
     assert(format != NULL);
@@ -143,7 +143,7 @@ void buffer_append_fmt(Buffer *buf, const char *format, ...)
     va_end(vargs);
 }
 
-void buffer_rewind(Buffer * buf, size_t prev_sz)
+BUFFERDEF void buffer_rewind(Buffer * buf, size_t prev_sz)
 {
     assert(buf != NULL);
     assert(prev_sz <= buf->size);
