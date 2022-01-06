@@ -17,9 +17,7 @@ int main(int argc, const char **argv)
 {
     GO_REBUILD_URSELF(argc, argv);
 
-    printf("==============================\n");
-    printf("Building module: %s\n", MODULE);
-    printf("==============================\n");
+    INFO("Building module: \033[36;1m%s\033[0m", MODULE);
     Cstr srcpath = PATH(SRCDIR, MODULE);
 
     assert(argc >= 2);
