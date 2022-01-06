@@ -5,6 +5,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+const char * const MODULES[] = {
+    "lopsinvm",
+    "lopasm",
+};
+
 void build_module(Mode mode, const char *module)
 {
     Cstr module_nobuild_c = PATH(SRCDIR, module, "nobuild.c");

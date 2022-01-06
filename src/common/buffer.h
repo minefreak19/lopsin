@@ -33,6 +33,7 @@ BUFFERDEF void buffer_append_char(Buffer *, char);
 BUFFERDEF void buffer_append_str(Buffer *, const char *str, size_t len);
 BUFFERDEF void buffer_append_cstr(Buffer *, const char *cstr);
 BUFFERDEF void buffer_append_fmt(Buffer *, const char *format, ...) PRINTF_FORMAT(2, 3);
+BUFFERDEF void buffer_append_file(Buffer *, const char *path);
 BUFFERDEF void buffer_rewind(Buffer *, size_t prev_sz);
 
 #ifdef __cplusplus
@@ -62,7 +63,7 @@ static void buffer_ensure(Buffer *buf, size_t req)
 
 BUFFERDEF Buffer *new_buffer(size_t cap)
 {
-    if (cap == 0) cap = DEFAULT_TMP_BUF_CAP;
+    if (cap == 0) cap = DEFAULT_BUFFER_CAP;
 
     Buffer *result = NOTNULL(malloc(sizeof(Buffer)));
 
@@ -86,7 +87,8 @@ BUFFERDEF void buffer_free(Buffer *buf)
     assert(buf != NULL);
 
     if (buf->size > 0) {
-        PANIC("Attempted to free non-empty buffer. buffer_clear() should be called first.\n");
+        fprintf(stderr, "Attempted to free non-empty buffer. buffer_clear() should be called first.\n");
+        exit(1);
     }
 
     free(buf->data);
@@ -141,6 +143,61 @@ BUFFERDEF void buffer_append_fmt(Buffer *buf, const char *format, ...)
 
     free(str);
     va_end(vargs);
+}
+
+BUFFERDEF void buffer_append_file(Buffer *buf, const char *file_path)
+{
+    FILE *infile = fopen(file_path, "rb");
+
+    if (infile == NULL) {
+        fprintf(stderr, "ERROR: Could not open file %s: %s\n",
+            file_path, strerror(errno));
+        exit(1);
+    }
+
+    if (fseek(infile, 0, SEEK_END) < 0) {
+        fprintf(stderr, "ERROR: could not seek in file %s: %s\n",
+            file_path, strerror(errno));
+        fclose(infile);
+        exit(1);
+    }
+    int len = ftell(infile);
+
+    if (len < 0) {
+        fprintf(stderr, "ERROR: Could not obtain file size for %s: %s\n",
+            file_path, strerror(errno));
+
+        fclose(infile);
+        exit(1);
+    }
+
+    if (fseek(infile, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "ERROR: could not seek in file %s: %s\n",
+            file_path, strerror(errno));
+        fclose(infile);
+        exit(1);
+    }
+
+    char *contents = NOTNULL(malloc((len) * sizeof(char)));
+    if (fread(contents, sizeof(char), len, infile) == 0) {
+        if (ferror(infile)) {
+            fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+                file_path, strerror(errno));
+        } else if (feof(infile)) {
+            fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+                    file_path, "Reached end of file");
+        } else {
+            assert(false && "Unreachable");
+        }
+        fclose(infile);
+        free(contents);
+        exit(1);
+    }
+
+    buffer_append_str(buf, contents, len);
+
+    free(contents);
+    fclose(infile);
 }
 
 BUFFERDEF void buffer_rewind(Buffer * buf, size_t prev_sz)

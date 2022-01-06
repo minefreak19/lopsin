@@ -16,16 +16,10 @@ extern "C"
 
 #define NOBUILD_CFLAGS "-std=c99", "-O3", "-DCC=\""CC"\""
 
-#define LDFLAGS "-g", "-static"
-
 #define SRCDIR "src"
 #define BINDIR "bin"
 
 #define C_INCLUDES JOIN("", "-I", PATH(SRCDIR, "common"))
-
-const char * const MODULES[] = {
-    "lopsinvm",
-};
 
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
 
