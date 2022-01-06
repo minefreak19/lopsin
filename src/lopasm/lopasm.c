@@ -42,13 +42,20 @@ static bool parse_inst(String_View *source, LopsinInst *out)
     LopsinInst result = {0};
     String_View inst = sv_trim(sv_chop_by_delim(source, ' '));
 
+    bool found_type = false;
     for (LopsinInstType i = 0; i < COUNT_LOPSIN_INST_TYPES; i++) {
         String_View inst_name = sv_from_cstr(LOPSIN_INST_TYPE_NAMES[i]);
 
         if (sv_eq(inst, inst_name)) {
             result.type = i;
+            found_type = true;
             break;
         }
+    }
+
+    if (!found_type) {
+        fprintf(stderr, "ERROR: Invalid instruction `"SV_Fmt"`\n", SV_Arg(inst));
+        return false;
     }
 
     if (needs_operand(result.type)) {
