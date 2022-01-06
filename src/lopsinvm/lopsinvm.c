@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "util.h"
 
@@ -39,7 +40,7 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_PUTC]          = "putc",
 };
 
-static_assert(COUNT_LOPSIN_ERRS == 7, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
+static_assert(COUNT_LOPSIN_ERRS == 8, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
 const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_OK]              = "OK",
 
@@ -49,6 +50,7 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_ILLEGAL_INST]    = "Illegal instruction",
     [ERR_BAD_INST_PTR]    = "Bad instruction pointer",
     [ERR_HALTED]          = "Already halted",
+    [ERR_INVALID_OPERAND]     = "Invalid operand for operation",
 
     [ERR_DIV_BY_ZERO]     = "Division by zero",
 };
@@ -113,22 +115,45 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_DUP: {
-        if (vm->sp >= vm->stack_cap) {
+        if (inst.operand <= 0) {
+            return ERR_INVALID_OPERAND;
+        }
+
+        if (vm->sp + inst.operand >= vm->stack_cap) {
             return ERR_STACK_OVERFLOW;
         }
-        vm->stack[vm->sp] = vm->stack[vm->sp - 1];
-        vm->sp++;
+
+        if ((LopsinValue) vm->sp < inst.operand) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        size_t saved_sp = vm->sp;
+        for (LopsinValue i = 0; i < inst.operand; i++) {
+            vm->stack[vm->sp++] = vm->stack[saved_sp - (inst.operand - i)];
+        }
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SWAP: {
-        if (vm->sp < 2) {
+        if (inst.operand <= 0) {
+            return ERR_INVALID_OPERAND;
+        }
+
+        if (vm->sp < (2 * (size_t)inst.operand)) {
             return ERR_STACK_UNDERFLOW;
         }
-    
-        LopsinValue temp = vm->stack[vm->sp - 1];
-        vm->stack[vm->sp - 1] = vm->stack[vm->sp - 2];
-        vm->stack[vm->sp - 2] = temp;
+
+        size_t swap_sz = inst.operand * sizeof(LopsinValue);
+        LopsinValue *temp = NOTNULL(malloc(swap_sz));
+        memcpy(temp, &vm->stack[vm->sp - (2 * inst.operand)], swap_sz);
+        memcpy(&vm->stack[vm->sp - (2 * inst.operand)], &vm->stack[vm->sp - inst.operand], swap_sz);
+        memcpy(&vm->stack[vm->sp - inst.operand], temp, swap_sz);
+
+
+        // LopsinValue temp = vm->stack[vm->sp - 1];
+        // vm->stack[vm->sp - 1] = vm->stack[vm->sp - 2];
+        // vm->stack[vm->sp - 2] = temp;
 
         vm->ip++;
     } break;

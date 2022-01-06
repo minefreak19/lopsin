@@ -8,16 +8,15 @@
 #define LOPSINVM_STACK_CAP 1024 
 
 LopsinInst program[] = {
-    MAKE_INST(PUSH, 10),
+    MAKE_INST(PUSH, 17),
+    MAKE_INST(PUSH, 34),
+    MAKE_INST(PUSH, 51),
+    
     MAKE_INST(PUSH, 15),
-    MAKE_INST(LT,   0),
-    MAKE_INST(CRJMP, 4),
-    MAKE_INST(PUSH, 'n'),
-    MAKE_INST(PUTC, 0),
-    MAKE_INST(HLT,  0),
-    MAKE_INST(PUSH, 'Y'),
-    MAKE_INST(PUTC, 0),
-    MAKE_INST(HLT,  0),
+    MAKE_INST(PUSH, 20),
+    MAKE_INST(PUSH, 30),
+    MAKE_INST(SWAP,  3),
+    MAKE_INST(HLT, 0)
 
     // MAKE_INST(PUSH, '\n'),
     // MAKE_INST(PUSH, '!'),
@@ -54,7 +53,7 @@ int main(int argc, const char **argv)
         .stack      = NOTNULL(calloc(LOPSINVM_STACK_CAP, sizeof(LopsinValue))),
         .stack_cap  = LOPSINVM_STACK_CAP,
         .sp         = 0,
-        .debug_mode = false,
+        .debug_mode = true,
     };
 
     lopsinvm_start(&vm);

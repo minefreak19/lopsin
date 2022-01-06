@@ -25,6 +25,7 @@ typedef enum {
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
     ERR_HALTED,
+    ERR_INVALID_OPERAND,
 
     ERR_DIV_BY_ZERO,
 
