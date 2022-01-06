@@ -70,9 +70,6 @@ int main(int argc, const char **argv)
 {
     (void) argc;
 
-    LopsinVM vm = lopsinvm_new();
-    vm.debug_mode = true;
-
     size_t prog_sz = 0;
     LopsinInst *prog = NOTNULL(calloc(PROGRAM_CAP, sizeof(LopsinInst)));
 
@@ -106,15 +103,23 @@ int main(int argc, const char **argv)
         parse_inst(&line, &prog[prog_sz++]);
     } while (input.count > 0);
 
-    lopsinvm_load_program_from_memory(&vm, prog, prog_sz);
-    LopsinErr err;
-    if ((err = lopsinvm_start(&vm))) {
-        fprintf(stderr, "ERROR: %s\n", LOPSIN_ERR_NAMES[err]);
+    buffer_clear(input_buf);
+    buffer_free(input_buf);
+
+    FILE *outfile = fopen(output_path, "wb");
+    if (outfile == NULL) {
+        fprintf(stderr, "ERROR: Could not open file %s: %s\n", 
+                output_path, strerror(errno));
         exit(1);
     }
 
-    buffer_clear(input_buf);
-    buffer_free(input_buf);
+    if (fwrite(prog, sizeof(LopsinInst), prog_sz, outfile) < prog_sz) {
+        fprintf(stderr, "ERROR: Could not write to file %s: %s\n",
+                output_path, strerror(errno));
+        exit(1);
+    }
+    
+    fclose(outfile);
 
     return 0;
 }
