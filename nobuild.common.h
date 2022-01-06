@@ -21,7 +21,7 @@ extern "C"
 #define SRCDIR "src"
 #define BINDIR "bin"
 
-#define C_INCLUDES "-I" SRCDIR "/common/"
+#define C_INCLUDES JOIN("", "-I", PATH(SRCDIR, "common"))
 
 const char * const MODULES[] = {
     "lopsinvm",
