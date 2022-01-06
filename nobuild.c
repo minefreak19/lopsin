@@ -2,6 +2,7 @@
 #include "./nobuild.h"
 #include "./nobuild.common.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -9,6 +10,13 @@ const char * const MODULES[] = {
     "lopsinvm",
     "lopasm",
 };
+
+bool starts_with(Cstr cstr, Cstr prefix)
+{
+    size_t prefix_len = strlen(prefix);
+    if (prefix_len > strlen(cstr)) return false;
+    return strncmp(cstr, prefix, prefix_len) == 0;
+}
 
 void build_module(Mode mode, const char *module)
 {
@@ -86,7 +94,7 @@ void ensure_dirs(void)
 
 void usage(FILE *stream, const char *program)
 {
-    fprintf(stream, "USAGE: %s <build|debug>\n", program);
+    fprintf(stream, "USAGE: %s <build|debug|clean>\n", program);
 }
 
 int main(int argc, const char **argv)
@@ -108,6 +116,26 @@ int main(int argc, const char **argv)
         mode = MODE_BUILD;
     } else if (strcmp(mode_text, "debug") == 0) {
         mode = MODE_DEBUG;
+    } else if (strcmp(mode_text, "clean") == 0) {
+        INFO("Clean mode. Removing binaries...\n");
+
+        RM(PATH(".", "nobuild.old"));
+        for (size_t i = 0; i < ARRAY_LEN(MODULES); i++) {
+            Cstr module = MODULES[i];
+            Cstr module_path = PATH(SRCDIR, module);
+
+            RM(PATH(BINDIR, module));
+
+            FOREACH_FILE_IN_DIR(file, module_path, {
+                if ((strcmp(file, "nobuild") == 0) 
+                 || (starts_with(file, "nobuild") && ENDS_WITH(file, ".old")))
+                {
+                    RM(PATH(module_path, file));
+                }
+            });
+        }
+
+        return 0;
     } else {
         usage(stderr, program);
         fprintf(stderr, "ERROR: Invalid mode `%s`\n", mode_text);

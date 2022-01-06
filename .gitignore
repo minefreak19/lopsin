@@ -4,6 +4,7 @@
 # nobuild build system
 nobuild
 nobuild.old
+nobuild.*
 
 # binaries
 bin/
