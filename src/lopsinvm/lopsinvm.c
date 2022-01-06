@@ -327,3 +327,24 @@ LopsinErr lopsinvm_start(LopsinVM *vm)
 
     return err;
 }
+
+LopsinVM lopsinvm_new(void)
+{
+    return (LopsinVM) {
+        .debug_mode = false,
+        .ip = 0,
+        .program = NULL,
+        .program_sz = 0,
+        .running = false,
+        .sp = 0,
+        .stack = NOTNULL(calloc(LOPSINVM_DEFAULT_STACK_CAP, sizeof(LopsinValue))),
+        .stack_cap = LOPSINVM_DEFAULT_STACK_CAP,
+    };
+}
+
+void lopsinvm_load_program_from_memory(LopsinVM *vm, LopsinInst *program, size_t program_sz)
+{
+    vm->program = NOTNULL(malloc(program_sz * sizeof(LopsinInst)));
+    vm->program_sz = program_sz;
+    memcpy(vm->program, program, program_sz * sizeof(LopsinInst));
+}

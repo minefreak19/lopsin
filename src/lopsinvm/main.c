@@ -5,7 +5,6 @@
 
 #include "util.h"
 
-#define LOPSINVM_STACK_CAP 1024 
 
 LopsinInst program[] = {
     MAKE_INST(PUSH, 17),
@@ -50,8 +49,8 @@ int main(int argc, const char **argv)
         .ip         = 0,
         .program    = program,
         .program_sz = ARRAY_LEN(program),
-        .stack      = NOTNULL(calloc(LOPSINVM_STACK_CAP, sizeof(LopsinValue))),
-        .stack_cap  = LOPSINVM_STACK_CAP,
+        .stack      = NOTNULL(calloc(LOPSINVM_DEFAULT_STACK_CAP, sizeof(LopsinValue))),
+        .stack_cap  = LOPSINVM_DEFAULT_STACK_CAP,
         .sp         = 0,
         .debug_mode = true,
     };

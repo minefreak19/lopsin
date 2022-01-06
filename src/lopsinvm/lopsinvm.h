@@ -70,6 +70,8 @@ typedef struct {
     LopsinValue operand;
 } LopsinInst;
 
+#define LOPSINVM_DEFAULT_PROGRAM_COUNT 1024
+#define LOPSINVM_DEFAULT_STACK_CAP 1024 
 typedef struct {
     LopsinValue *stack;
     size_t stack_cap;
@@ -90,6 +92,10 @@ typedef struct {
 
 extern const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES];
 extern const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS];
+
+LopsinVM lopsinvm_new(void);
+
+void lopsinvm_load_program_from_memory(LopsinVM *, LopsinInst *program, size_t program_sz);
 
 LopsinErr lopsinvm_run_inst(LopsinVM *);
 LopsinErr lopsinvm_start(LopsinVM *);
