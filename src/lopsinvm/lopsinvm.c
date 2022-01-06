@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "util.h"
 
@@ -347,4 +348,61 @@ void lopsinvm_load_program_from_memory(LopsinVM *vm, LopsinInst *program, size_t
     vm->program = NOTNULL(malloc(program_sz * sizeof(LopsinInst)));
     vm->program_sz = program_sz;
     memcpy(vm->program, program, program_sz * sizeof(LopsinInst));
+}
+
+void lopsinvm_load_program_from_file(LopsinVM *vm, const char *path)
+{
+    FILE *file = fopen(path, "rb");
+    if (file == NULL) {
+        fprintf(stderr, "ERROR: Could not open file %s: %s\n", 
+                path, strerror(errno));
+        exit(1);
+    }
+
+    if (fseek(file, 0, SEEK_END) < 0) {
+        fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+            path, strerror(errno));
+        fclose(file);
+        exit(1);
+    }
+
+    long len = ftell(file);
+
+    if (len < 0) {
+        fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+            path, strerror(errno));
+
+        fclose(file);
+        exit(1);
+    }
+
+    if (fseek(file, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+            path, strerror(errno));
+        fclose(file);
+        exit(1);
+    }
+
+    LopsinInst *contents = NOTNULL(malloc(len));
+    if (fread(contents, 1, len, file) < (size_t)len) {
+        if (ferror(file)) {
+            fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+                path, strerror(errno));
+        } else if (feof(file)) {
+            fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+                    path, "Reached end of file");
+        } else {
+            assert(false && "Unreachable");
+        }
+        fclose(file);
+        free(contents);
+        exit(1);
+    }
+
+    fclose(file);
+
+    size_t count = len / sizeof(LopsinInst);
+    lopsinvm_load_program_from_memory(vm, contents, count);
+
+    free(contents);
 }

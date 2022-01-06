@@ -1,0 +1,5 @@
+push 279
+push 35
+sum
+dump
+hlt
