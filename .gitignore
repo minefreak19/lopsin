@@ -3,8 +3,10 @@
 
 # nobuild build system
 nobuild
-nobuild.old
-nobuild.*
+*.old
+
+# testing
+test
 
 # binaries
 bin/

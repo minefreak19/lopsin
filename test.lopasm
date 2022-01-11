@@ -1,5 +1,6 @@
-push 279
-push 35
-sum
-dump
-hlt
+label: 
+
+push 15
+push 10
+gt
+cjmp label
