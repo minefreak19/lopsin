@@ -1,5 +1,5 @@
 #define SVDEF static inline
-#include "lopasm.h" // also includes <sv.h>
+#include "lopasm_lexer.h" // also includes <sv.h>
 
 #define SV_IMPLEMENTATION
 #include <sv.h>
