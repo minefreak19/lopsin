@@ -14,7 +14,7 @@ extern "C"
 #define DEBUG_CFLAGS CFLAGS, "-ggdb", "-D_DEBUG"
 #define BUILD_CFLAGS CFLAGS, "-O3"
 
-#define NOBUILD_CFLAGS "-std=c99", "-O3", "-DCC=\""CC"\""
+#define NOBUILD_CFLAGS "-std=c11", "-O3", "-DCC=\""CC"\""
 
 #define SRCDIR "src"
 #define BINDIR "bin"

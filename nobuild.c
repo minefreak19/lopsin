@@ -146,6 +146,6 @@ int main(int argc, const char **argv)
         const char * const module = MODULES[i];
         build_module(mode, module);
     }
-    
+
     return 0;
 }
