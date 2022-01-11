@@ -463,13 +463,6 @@ LopsinVM lopsinvm_new(void)
     };
 }
 
-void lopsinvm_load_program_from_memory(LopsinVM *vm, LopsinInst *program, size_t program_sz)
-{
-    vm->program.insts = NOTNULL(malloc(program_sz * sizeof(LopsinInst)));
-    vm->program.count = program_sz;
-    memcpy(vm->program.insts, program, program_sz * sizeof(LopsinInst));
-}
-
 void lopsinvm_load_program_from_file(LopsinVM *vm, const char *path)
 {
     FILE *file = fopen(path, "rb");
@@ -522,7 +515,17 @@ void lopsinvm_load_program_from_file(LopsinVM *vm, const char *path)
     fclose(file);
 
     size_t count = len / sizeof(LopsinInst);
-    lopsinvm_load_program_from_memory(vm, contents, count);
+
+    LopsinVMProgram program = {
+        .count = count,
+        .cap   = count,
+    };
+
+    program.insts = NOTNULL(malloc(count * sizeof(LopsinInst)));
+
+    memcpy(program.insts, contents, count * sizeof(LopsinInst));
+
+    vm->program = program;
 
     free(contents);
 }

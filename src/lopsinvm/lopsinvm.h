@@ -111,7 +111,6 @@ extern const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS];
 
 LopsinVM lopsinvm_new(void);
 
-void lopsinvm_load_program_from_memory(LopsinVM *, LopsinInst *program, size_t program_sz);
 void lopsinvm_load_program_from_file(LopsinVM *, const char *path);
 
 LopsinErr lopsinvm_run_inst(LopsinVM *);
