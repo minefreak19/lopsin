@@ -89,10 +89,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         return ERR_HALTED;
     }
 
-    if (vm->ip >= vm->program_sz) {
+    if (vm->ip >= vm->program.count) {
         return ERR_BAD_INST_PTR;
     }
-    LopsinInst inst = vm->program[vm->ip];
+    LopsinInst inst = vm->program.insts[vm->ip];
     
     if (vm->debug_mode) {
         fprintf(stdout, "Current instruction: %s %"PRId64"\n", 
@@ -451,8 +451,11 @@ LopsinVM lopsinvm_new(void)
     return (LopsinVM) {
         .debug_mode = false,
         .ip = 0,
-        .program = NULL,
-        .program_sz = 0,
+        .program = {
+            .insts = NULL,
+            .count = 0,
+            .cap = 0,
+        },
         .running = false,
         .sp = 0,
         .stack = NOTNULL(calloc(LOPSINVM_DEFAULT_STACK_CAP, sizeof(LopsinValue))),
@@ -462,9 +465,9 @@ LopsinVM lopsinvm_new(void)
 
 void lopsinvm_load_program_from_memory(LopsinVM *vm, LopsinInst *program, size_t program_sz)
 {
-    vm->program = NOTNULL(malloc(program_sz * sizeof(LopsinInst)));
-    vm->program_sz = program_sz;
-    memcpy(vm->program, program, program_sz * sizeof(LopsinInst));
+    vm->program.insts = NOTNULL(malloc(program_sz * sizeof(LopsinInst)));
+    vm->program.count = program_sz;
+    memcpy(vm->program.insts, program, program_sz * sizeof(LopsinInst));
 }
 
 void lopsinvm_load_program_from_file(LopsinVM *vm, const char *path)

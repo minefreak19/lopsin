@@ -82,13 +82,19 @@ typedef struct {
 
 #define LOPSINVM_DEFAULT_PROGRAM_COUNT 1024
 #define LOPSINVM_DEFAULT_STACK_CAP 1024 
+
+typedef struct {
+    LopsinInst *insts;
+    size_t count;
+    size_t cap;
+} LopsinVMProgram;
+
 typedef struct {
     LopsinValue *stack;
     size_t stack_cap;
     size_t sp;
 
-    LopsinInst *program;
-    size_t program_sz;
+    LopsinVMProgram program;
 
     size_t ip;
 
