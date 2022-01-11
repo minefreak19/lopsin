@@ -9,7 +9,7 @@
 
 #include "util.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 23, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 32, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -25,6 +25,16 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_DIV]           = "div",
     [LOPSIN_INST_MOD]           = "mod",
 
+    [LOPSIN_INST_SHL]           = "shl",
+    [LOPSIN_INST_SHR]           = "shr",
+    [LOPSIN_INST_BOR]           = "bor",
+    [LOPSIN_INST_BAND]          = "band",
+    [LOPSIN_INST_XOR]           = "xor",
+    [LOPSIN_INST_BNOT]          = "bnot",
+    [LOPSIN_INST_LOR]           = "lor",
+    [LOPSIN_INST_LAND]          = "land",
+    [LOPSIN_INST_LNOT]          = "lnot",
+    
     [LOPSIN_INST_GT]            = "gt",
     [LOPSIN_INST_LT]            = "lt",
     [LOPSIN_INST_GTE]           = "gte",
@@ -73,7 +83,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 23, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 32, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     
     if (!vm->running) {
         return ERR_HALTED;
@@ -209,6 +219,113 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         vm->stack[vm->sp - 1] %= a;
         vm->ip++;
     } break;
+
+    case LOPSIN_INST_SHL: {
+        if (vm->sp < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue b = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = b << a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_SHR: {
+        if (vm->sp < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue b = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = b >> a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_BOR: {
+        if (vm->sp < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue b = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = b | a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_BAND: {
+        if (vm->sp < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue b = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = b & a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_XOR: {
+        if (vm->sp < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue b = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = b ^ a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_BNOT: {
+        if (vm->sp < 1) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = ~a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_LOR: {
+        if (vm->sp < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue b = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = b || a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_LAND: {
+        if (vm->sp < 2) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue b = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = b && a;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_LNOT: {
+        if (vm->sp < 1) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        LopsinValue a = vm->stack[--vm->sp];
+
+        vm->stack[vm->sp++] = !a;
+        vm->ip++;
+    } break;
+
 
     case LOPSIN_INST_GT: {
         if (vm->sp < 2) return ERR_STACK_UNDERFLOW;
