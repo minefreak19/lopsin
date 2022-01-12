@@ -121,7 +121,11 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_DROP: {
-        vm->sp--;
+        if (vm->sp < inst.operand) {
+            return ERR_STACK_UNDERFLOW;
+        }
+
+        vm->sp -= inst.operand;
         vm->ip++;
     } break;
 
