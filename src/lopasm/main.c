@@ -15,7 +15,8 @@ static void usage(FILE *stream, const char *program_name)
     fprintf(stream, 
         "OPTIONS:\n"
         "   --debug, -d             Enable debugging mode\n"
-        "   --help,  -h             Print this help message and exit\n");
+        "   --help,  -h             Print this help message and exit\n"
+        "   --vm <vm.exe>           Use a shebang pointing to <vm.exe> (this does nothing smart with the working directory, exercise caution)\n");
 }
 
 #define cstreq(a, b) (strcmp(a, b) == 0)
@@ -29,6 +30,8 @@ int main(int argc, const char **argv)
     struct {
         const char *input_path;
         const char *output_path;
+        
+        const char *vm_path;
         bool debug_mode;
     } args = {0};
 
@@ -47,6 +50,18 @@ int main(int argc, const char **argv)
             }
         } else if (cstreq(arg, "--debug") || cstreq(arg, "-d")) {
             args.debug_mode = true;
+        } else if (cstreq(arg, "--vm")) {
+            args.vm_path = *argv++;
+            
+            #ifdef _WIN32
+            fprintf(stderr, "WARN: shebang is not supported on Windows\n");
+            #endif
+
+            if (args.vm_path == NULL) {
+                usage(stderr, program_name);
+                fprintf(stderr, "ERROR: trailing `--vm` without vm executable\n");
+                exit(1);
+            }
         } else {
             // TODO: lopasm does not support multiple compilation units
             if (args.input_path != NULL) {
@@ -113,6 +128,11 @@ int main(int argc, const char **argv)
     {
         Buffer *output_buf = new_buffer(0);
 
+        if (args.vm_path) {
+            buffer_append_cstr(output_buf, "#!");
+            buffer_append_cstr(output_buf, args.vm_path);
+            buffer_append_char(output_buf, '\n');
+        }
         buffer_append_cstr(output_buf, LOPSINVM_BYTECODE_MAGIC);
 
         LopsinInst inst = {0};
