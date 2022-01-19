@@ -16,8 +16,10 @@ extern "C"
 
 #if defined(__GNUC__) || defined(__clang__)
 # define PRINTF_FORMAT(fmt_idx, chk_idx) __attribute__ ((format (printf, fmt_idx, chk_idx)))
+# define FALLTHROUGH __attribute__ ((fallthrough))
 #else
 # define PRINTF_FORMAT(...)
+# define FALLTHROUGH
 #endif // defined(__GNUC__) || defined(__clang__)
 
 #ifdef _DEBUG
@@ -26,7 +28,21 @@ extern "C"
 # define NOTNULL(ptr) notnull_impl(NULL, 0, NULL, NULL, ptr)
 #endif
 
-static inline void *notnull_impl(const char *file, int line, const char *func, const char *expr, void *ptr)
+#ifndef static_assert
+#define static_assert _Static_assert
+#endif
+
+#define CRASH(message) assert(0 && message)
+#define UNIMPLEMENTED CRASH("UNIMPLEMENTED")
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* UTIL_H_ */
+
+#ifdef UTIL_IMPLEMENTATION
+inline void *notnull_impl(const char *file, int line, const char *func, const char *expr, void *ptr)
 {
     if (ptr == NULL) {
 #ifdef _DEBUG
@@ -43,13 +59,4 @@ static inline void *notnull_impl(const char *file, int line, const char *func, c
     }
     return ptr;
 }
-
-#ifndef static_assert
-#define static_assert _Static_assert
-#endif
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-#endif /* UTIL_H_ */
+#endif // UTIL_IMPLEMENTATION
