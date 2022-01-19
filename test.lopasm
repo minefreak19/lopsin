@@ -6,10 +6,15 @@ putcstr:
     ret
 
 main:
-push 0
-push 10
-push 97
+    push 0
+    push 10
+    push 97
+    push 98
+    push 99
+    push 65
+    push 66
+    push 67
 
-call putcstr
+    call putcstr
 
 hlt
