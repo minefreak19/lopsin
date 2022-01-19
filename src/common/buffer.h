@@ -37,6 +37,7 @@ BUFFERDEF void buffer_append_str(Buffer *, const char *str, size_t len);
 BUFFERDEF void buffer_append_cstr(Buffer *, const char *cstr);
 BUFFERDEF void buffer_append_fmt(Buffer *, const char *format, ...) PRINTF_FORMAT(2, 3);
 BUFFERDEF void buffer_append_file(Buffer *, const char *path);
+BUFFERDEF void buffer_write_to_file(const Buffer *buf, const char *file_path);
 BUFFERDEF void buffer_rewind(Buffer *, size_t prev_sz);
 
 #ifdef __cplusplus
@@ -206,6 +207,34 @@ BUFFERDEF void buffer_append_file(Buffer *buf, const char *file_path)
 
     free(contents);
     fclose(infile);
+}
+
+BUFFERDEF void buffer_write_to_file(const Buffer *buf, const char *file_path)
+{
+    assert(buf != NULL);
+    assert(file_path != NULL);
+
+    FILE *f = fopen(file_path);
+
+    if (f == NULL) {
+        fprintf(stderr, "ERROR: Could not open file %s: %s\n", 
+                file_path, strerror(errno));
+        exit(1);
+    }
+
+    size_t written = fwrite(buf->data, sizeof(char), buf->size, f);
+
+    if (written < buf->size) {
+        fprintf(stderr, "ERROR: Could not write buffer to file %s: %s\n",
+                file_path, strerror(errno));
+        exit(1);
+    }
+
+    if (fclose(f)) {
+        fprintf(stderr, "ERROR: Could not properly close file %s: %s\n",
+                file_path, strerror(errno));
+        exit(1);
+    }
 }
 
 BUFFERDEF void buffer_rewind(Buffer * buf, size_t prev_sz)
