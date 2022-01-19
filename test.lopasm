@@ -1,6 +1,7 @@
-label: 
 
 push 15
 push 10
+label: 
 gt
 cjmp label
+push nop

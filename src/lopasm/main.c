@@ -4,7 +4,6 @@
 #include <string.h>
 #include <errno.h>
 
-#define BUFFER_IMPLEMENTATION
 #include <buffer.h>
 
 #include "./lopasm.h"
@@ -47,6 +46,8 @@ int main(int argc, const char **argv)
         .loc = {0},
         .source = input,
     };
+
+    LopAsm_Parser *parser = new_parser();
     LopAsm_Token tok = {0};
 
     bool success;
@@ -55,6 +56,25 @@ int main(int argc, const char **argv)
 
         if (success) {
             lopasm_print_token(stdout, tok);
+            if (!lopasm_parser_accept_token(parser, tok)) {
+                fprintf(stderr, "ERROR: parser did not accept token\n");
+                exit(1);
+            }
+            else {
+                printf("Parser accepted token.\n");
+            }
+        }
+    } while (success);
+
+    lopasm_parser_next_phase(parser);
+
+    LopsinInst inst = {0};
+    do {
+        success = lopasm_parser_spit_inst(parser, &inst);
+
+        if (success) {
+            printf("Spit instruction: %s\t%u\n",
+                   LOPSIN_INST_TYPE_NAMES[inst.type], (unsigned) inst.operand);
         }
     } while (success);
 

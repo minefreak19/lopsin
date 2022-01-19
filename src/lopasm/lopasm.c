@@ -4,11 +4,9 @@
 #include <string.h>
 #include <errno.h>
 
-#define SVDEF static inline
 #define SV_IMPLEMENTATION
 #include <sv.h>
 
-#define BUFFERDEF static inline
 #define BUFFER_IMPLEMENTATION
 #include <buffer.h>
 
