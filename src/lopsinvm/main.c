@@ -14,7 +14,8 @@ static void usage(FILE *stream, const char *program)
     fprintf(stream, "USAGE: %s <input.lopsinvm> [OPTIONS]\n", program);
     fprintf(stream, 
         "OPTIONS:\n"
-        "   --debug, -d             Enable debug mode\n");
+        "   --debug, -d             Enable debug mode\n"
+        "   --help,  -h             Display this help and exit\n");
 }
 
 int main(int argc, const char **argv)
@@ -24,7 +25,7 @@ int main(int argc, const char **argv)
     assert(*argv != NULL);
 
     const char *program_name = *argv++;
-    
+
     struct {
         const char *input_file;
         bool debug_mode;
@@ -33,7 +34,10 @@ int main(int argc, const char **argv)
     while (*argv != NULL) {
         const char *arg = *argv++;
         
-        if (cstreq(arg, "--debug") || cstreq(arg, "-d")) {
+        if (cstreq(arg, "--help") || cstreq(arg, "-h")) {
+            usage(stdout, program_name);
+            exit(0);
+        } else if (cstreq(arg, "--debug") || cstreq(arg, "-d")) {
             args.debug_mode = true;
         } else {
             // throw error if we already have an input file
