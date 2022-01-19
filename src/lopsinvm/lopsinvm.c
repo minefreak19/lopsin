@@ -121,7 +121,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_DROP: {
-        if (vm->sp < inst.operand) {
+        if (vm->sp < (unsigned) inst.operand) {
             return ERR_STACK_UNDERFLOW;
         }
 
