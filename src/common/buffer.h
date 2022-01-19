@@ -32,7 +32,7 @@ BUFFERDEF Buffer *new_buffer(size_t cap);
 BUFFERDEF void buffer_clear(Buffer *);
 BUFFERDEF void buffer_free(Buffer *);
 BUFFERDEF void buffer_append_char(Buffer *, char);
-BUFFERDEF void buffer_append_bytes(Buffer *, void *ptr, size_t bytes);
+BUFFERDEF void buffer_append_bytes(Buffer *, const void *ptr, size_t bytes);
 BUFFERDEF void buffer_append_str(Buffer *, const char *str, size_t len);
 BUFFERDEF void buffer_append_cstr(Buffer *, const char *cstr);
 BUFFERDEF void buffer_append_fmt(Buffer *, const char *format, ...) PRINTF_FORMAT(2, 3);
@@ -105,7 +105,7 @@ BUFFERDEF void buffer_append_char(Buffer *buf, char c)
     buf->data[buf->size++] = c;
 }
 
-BUFFERDEF void buffer_append_bytes(Buffer *buf, void *ptr, size_t bytes)
+BUFFERDEF void buffer_append_bytes(Buffer *buf, const void *ptr, size_t bytes)
 {
     assert(buf != NULL);
     assert(ptr != NULL);
@@ -120,7 +120,7 @@ BUFFERDEF void buffer_append_bytes(Buffer *buf, void *ptr, size_t bytes)
 
 BUFFERDEF void buffer_append_str(Buffer *buf, const char *str, size_t len)
 {
-    return buffer_append_bytes(buf, str, len);
+    buffer_append_bytes(buf, str, len);
 }
 
 BUFFERDEF void buffer_append_cstr(Buffer *buf, const char *cstr)
@@ -214,7 +214,7 @@ BUFFERDEF void buffer_write_to_file(const Buffer *buf, const char *file_path)
     assert(buf != NULL);
     assert(file_path != NULL);
 
-    FILE *f = fopen(file_path);
+    FILE *f = fopen(file_path, "wb");
 
     if (f == NULL) {
         fprintf(stderr, "ERROR: Could not open file %s: %s\n", 
