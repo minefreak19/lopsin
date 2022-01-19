@@ -68,15 +68,26 @@ int main(int argc, const char **argv)
 
     lopasm_parser_next_phase(parser);
 
-    LopsinInst inst = {0};
-    do {
-        success = lopasm_parser_spit_inst(parser, &inst);
+    {
+        Buffer *output_buf = new_buffer(0);
 
-        if (success) {
-            printf("Spit instruction: %s\t%u\n",
-                   LOPSIN_INST_TYPE_NAMES[inst.type], (unsigned) inst.operand);
-        }
-    } while (success);
+        LopsinInst inst = {0};
+        do {
+            success = lopasm_parser_spit_inst(parser, &inst);
+
+            if (success) {
+                printf("Spit instruction: %s\t%u\n",
+                    LOPSIN_INST_TYPE_NAMES[inst.type], (unsigned) inst.operand);
+
+                buffer_append_bytes(output_buf, &inst, sizeof(LopsinInst));
+            }
+        } while (success);
+
+        buffer_write_to_file(output_buf, output_path);
+
+        buffer_clear(output_buf);
+        buffer_free(output_buf);
+    }
 
     buffer_clear(input_buf);
     buffer_free(input_buf);

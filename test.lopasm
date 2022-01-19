@@ -1,7 +1,10 @@
-
-push 15
+jmp label
 push 10
+push 97
+putc
+putc
+
 label: 
-gt
-cjmp label
-push nop
+push 98
+putc
+hlt
