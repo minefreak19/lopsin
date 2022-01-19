@@ -27,6 +27,7 @@ typedef struct Buffer {
     size_t cap;
 } Buffer;
 
+BUFFERDEF void buffer_ensure(Buffer *, size_t);
 BUFFERDEF Buffer *new_buffer(size_t cap);
 BUFFERDEF void buffer_clear(Buffer *);
 BUFFERDEF void buffer_free(Buffer *);
@@ -55,7 +56,7 @@ BUFFERDEF void buffer_rewind(Buffer *, size_t prev_sz);
 
 #include "util.h"
 
-static void buffer_ensure(Buffer *buf, size_t req)
+BUFFERDEF void buffer_ensure(Buffer *buf, size_t req)
 {
     if (buf->cap >= req) return;
 
