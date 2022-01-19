@@ -10,9 +10,15 @@
 
 static void usage(FILE *stream, const char *program_name)
 {
-    fprintf(stream, "USAGE: %s <input.lopasm> <output.lopsinvm>\n", 
+    fprintf(stream, "USAGE: %s <input.lopasm> -o <output.lopsinvm> [OPTIONS]\n", 
             program_name);
+    fprintf(stream, 
+        "OPTIONS:\n"
+        "   --debug, -d             Enable debugging mode\n"
+        "   --help,  -h             Print this help message and exit\n");
 }
+
+#define cstreq(a, b) (strcmp(a, b) == 0)
 
 int main(int argc, const char **argv)
 {
@@ -20,28 +26,60 @@ int main(int argc, const char **argv)
 
     const char *program_name = *argv++;
 
-    const char *input_path = *argv++;
-    if (input_path == NULL) {
+    struct {
+        const char *input_path;
+        const char *output_path;
+        bool debug_mode;
+    } args = {0};
+
+    while (*argv != NULL) {
+        const char *arg = *argv++;
+
+        if (cstreq(arg, "--help") || cstreq(arg, "-h")) {
+            usage(stdout, program_name);
+            exit(0);
+        } else if (cstreq(arg, "-o")) {
+            args.output_path = *argv++;
+            if (args.output_path == NULL) {
+                usage(stderr, program_name);
+                fprintf(stderr, "ERROR: trailing `-o` without output file\n");
+                exit(1);
+            }
+        } else if (cstreq(arg, "--debug") || cstreq(arg, "-d")) {
+            args.debug_mode = true;
+        } else {
+            // TODO: lopasm does not support multiple compilation units
+            if (args.input_path != NULL) {
+                usage(stderr, program_name);
+                fprintf(stderr, "ERROR: unrecognised argument `%s`\n", arg);
+                exit(1);
+            }
+
+            args.input_path = arg;
+        }
+    }
+
+    if (args.input_path == NULL) {
         usage(stderr, program_name);
         fprintf(stderr, "ERROR: no input file provided\n");
         exit(1);
     }
 
-    const char *output_path = *argv++;
-    if (output_path == NULL) {
+    if (args.output_path == NULL) {
         usage(stderr, program_name);
         fprintf(stderr, "ERROR: no output file provided\n");
         exit(1);
     }
 
     Buffer *input_buf = new_buffer(0);
-    buffer_append_file(input_buf, input_path);
+    buffer_append_file(input_buf, args.input_path);
 
     String_View input = {
         .count = input_buf->size,
         .data  = input_buf->data,
     };
 
+    // TODO: lopasm has no proper error reporting
     LopAsm_Lexer lexer = {
         .loc = {0},
         .source = input,
@@ -55,13 +93,17 @@ int main(int argc, const char **argv)
         success = lopasm_lexer_spit_token(&lexer, &tok);
 
         if (success) {
-            lopasm_print_token(stdout, tok);
+            if (args.debug_mode) {
+                lopasm_print_token(stdout, tok);
+            }
+
             if (!lopasm_parser_accept_token(parser, tok)) {
                 fprintf(stderr, "ERROR: parser did not accept token\n");
                 exit(1);
-            }
-            else {
-                printf("Parser accepted token.\n");
+            } else {
+                if (args.debug_mode) {
+                    printf("Parser accepted token.\n");
+                }
             }
         }
     } while (success);
@@ -78,14 +120,17 @@ int main(int argc, const char **argv)
             success = lopasm_parser_spit_inst(parser, &inst);
 
             if (success) {
-                printf("Spit instruction: %s\t%u\n",
-                    LOPSIN_INST_TYPE_NAMES[inst.type], (unsigned) inst.operand);
+                if (args.debug_mode) {
+                    printf("Spit instruction: %s\t%u\n",
+                           LOPSIN_INST_TYPE_NAMES[inst.type],
+                           (unsigned) inst.operand);
+                }
 
                 buffer_append_bytes(output_buf, &inst, sizeof(LopsinInst));
             }
         } while (success);
 
-        buffer_write_to_file(output_buf, output_path);
+        buffer_write_to_file(output_buf, args.output_path);
 
         buffer_clear(output_buf);
         buffer_free(output_buf);
@@ -93,6 +138,8 @@ int main(int argc, const char **argv)
 
     buffer_clear(input_buf);
     buffer_free(input_buf);
+
+    printf("Compiled %s -> %s successfully.\n", args.input_path, args.output_path);
 
     return 0;
 }
