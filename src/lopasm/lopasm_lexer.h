@@ -26,6 +26,7 @@ typedef enum {
     LOPASM_TOKEN_TYPE_INST = 0,
     LOPASM_TOKEN_TYPE_LIT_INT,
     LOPASM_TOKEN_TYPE_IDENTIFIER,
+    LOPASM_TOKEN_TYPE_LABEL_DEF,
 
     COUNT_LOPASM_TOKEN_TYPES
 } LopAsm_TokenType;
@@ -42,10 +43,15 @@ typedef struct {
     String_View name;
 } LopAsm_IdentifierToken;
 
+typedef struct {
+    String_View name;
+} LopAsm_LabelDefToken;
+
 typedef union {
     LopAsm_InstToken inst;
     LopAsm_LitIntToken lit_int;
     LopAsm_IdentifierToken identifier;
+    LopAsm_LabelDefToken label_def;
 } LopAsm_TokenAs;
 
 

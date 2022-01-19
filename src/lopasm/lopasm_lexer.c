@@ -1,8 +1,4 @@
-#define SVDEF static inline
-#include "lopasm_lexer.h" // also includes <sv.h>
-
-#define SV_IMPLEMENTATION
-#include <sv.h>
+#include "lopasm_lexer.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -84,10 +80,24 @@ static bool lex_tok_as_i64(Token *tok)
     return true;
 }
 
+static bool lex_tok_as_label_def(Token *tok)
+{
+    String_View tok_text = sv_trim(tok->text);
+    String_View label_name;
+
+    if (sv_try_chop_by_delim(&tok_text, ':', &label_name)) {
+        tok->type = LOPASM_TOKEN_TYPE_LABEL_DEF;
+        tok->as.label_def.name = label_name;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 static bool lex_tok_as_identifier(Token *tok)
 {
     String_View toktext = tok->text;
-    String_View ident_name = sv_trim(sv_chop_by_delim(&toktext, ':'));
+    String_View ident_name = sv_trim(toktext);
 
     if (ident_name.count == 0) {
         return false;
@@ -114,6 +124,7 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 
     if (lex_tok_as_inst(&result)) {
     } else if (lex_tok_as_i64(&result)) {
+    } else if (lex_tok_as_label_def(&result)) {
     } else if (lex_tok_as_identifier(&result)) {
     } else {
         assert(false && "unreachable");
