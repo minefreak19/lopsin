@@ -9,7 +9,7 @@
 
 #include "util.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 32, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -46,17 +46,21 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_CJMP]          = "cjmp",
     [LOPSIN_INST_RJMP]          = "rjmp",
     [LOPSIN_INST_CRJMP]         = "crjmp",
+    [LOPSIN_INST_CALL]          = "call",
+    [LOPSIN_INST_RET]           = "ret",
 
     [LOPSIN_INST_DUMP]          = "dump",
     [LOPSIN_INST_PUTC]          = "putc",
 };
 
-static_assert(COUNT_LOPSIN_ERRS == 8, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
+static_assert(COUNT_LOPSIN_ERRS == 10, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
 const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_OK]              = "OK",
 
-    [ERR_STACK_UNDERFLOW] = "Stack underflow",
-    [ERR_STACK_OVERFLOW]  = "Stack overflow",
+    [ERR_DSTACK_UNDERFLOW] = "Data stack underflow",
+    [ERR_DSTACK_OVERFLOW]  = "Data stack overflow",
+    [ERR_RSTACK_UNDERFLOW] = "Return stack underflow",
+    [ERR_RSTACK_OVERFLOW]  = "Return stack overflow",
 
     [ERR_ILLEGAL_INST]    = "Illegal instruction",
     [ERR_BAD_INST_PTR]    = "Bad instruction pointer",
@@ -73,17 +77,17 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
         "Inst pointer:  %zu\n"
         "Stack: \n",
         
-        vm->sp, 
+        vm->dsp, 
         vm->ip);
 
-    for (size_t i = 0; i < vm->sp; i++) {
-        fprintf(stream, "\t%"PRId64"\n", vm->stack[i]);
+    for (size_t i = 0; i < vm->dsp; i++) {
+        fprintf(stream, "\t%"PRId64"\n", vm->dstack[i]);
     }
 }
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 32, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     
     if (!vm->running) {
         return ERR_HALTED;
@@ -113,19 +117,19 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_PUSH: {
-        if (vm->sp >= vm->stack_cap) {
-            return ERR_STACK_OVERFLOW;
+        if (vm->dsp >= vm->dstack_cap) {
+            return ERR_DSTACK_OVERFLOW;
         }
-        vm->stack[vm->sp++] = inst.operand;
+        vm->dstack[vm->dsp++] = inst.operand;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_DROP: {
-        if (vm->sp < (unsigned) inst.operand) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < (unsigned) inst.operand) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        vm->sp -= inst.operand;
+        vm->dsp -= inst.operand;
         vm->ip++;
     } break;
 
@@ -134,17 +138,17 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
             return ERR_INVALID_OPERAND;
         }
 
-        if (vm->sp + inst.operand >= vm->stack_cap) {
-            return ERR_STACK_OVERFLOW;
+        if (vm->dsp + inst.operand >= vm->dstack_cap) {
+            return ERR_DSTACK_OVERFLOW;
         }
 
-        if ((LopsinValue) vm->sp < inst.operand) {
-            return ERR_STACK_UNDERFLOW;
+        if ((LopsinValue) vm->dsp < inst.operand) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        size_t saved_sp = vm->sp;
+        size_t saved_sp = vm->dsp;
         for (LopsinValue i = 0; i < inst.operand; i++) {
-            vm->stack[vm->sp++] = vm->stack[saved_sp - (inst.operand - i)];
+            vm->dstack[vm->dsp++] = vm->dstack[saved_sp - (inst.operand - i)];
         }
 
         vm->ip++;
@@ -155,227 +159,227 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
             return ERR_INVALID_OPERAND;
         }
 
-        if (vm->sp < (2 * (size_t)inst.operand)) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < (2 * (size_t)inst.operand)) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
         size_t swap_sz = inst.operand * sizeof(LopsinValue);
         LopsinValue *temp = NOTNULL(malloc(swap_sz));
-        memcpy(temp, &vm->stack[vm->sp - (2 * inst.operand)], swap_sz);
-        memcpy(&vm->stack[vm->sp - (2 * inst.operand)], &vm->stack[vm->sp - inst.operand], swap_sz);
-        memcpy(&vm->stack[vm->sp - inst.operand], temp, swap_sz);
+        memcpy(temp, &vm->dstack[vm->dsp - (2 * inst.operand)], swap_sz);
+        memcpy(&vm->dstack[vm->dsp - (2 * inst.operand)], &vm->dstack[vm->dsp - inst.operand], swap_sz);
+        memcpy(&vm->dstack[vm->dsp - inst.operand], temp, swap_sz);
 
 
-        // LopsinValue temp = vm->stack[vm->sp - 1];
-        // vm->stack[vm->sp - 1] = vm->stack[vm->sp - 2];
-        // vm->stack[vm->sp - 2] = temp;
+        // LopsinValue temp = vm->dstack[vm->dsp - 1];
+        // vm->dstack[vm->dsp - 1] = vm->dstack[vm->dsp - 2];
+        // vm->dstack[vm->dsp - 2] = temp;
 
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SUM: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        LopsinValue a = vm->stack[--vm->sp];
-        vm->stack[vm->sp - 1] += a;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp - 1] += a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SUB: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        LopsinValue a = vm->stack[--vm->sp];
-        vm->stack[vm->sp - 1] -= a;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp - 1] -= a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_MUL: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        LopsinValue a = vm->stack[--vm->sp];
-        vm->stack[vm->sp - 1] *= a;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp - 1] *= a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_DIV: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
         if (a == 0) {
             return ERR_DIV_BY_ZERO;
         }
-        vm->stack[vm->sp - 1] /= a;
+        vm->dstack[vm->dsp - 1] /= a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_MOD: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
         if (a == 0) {
             return ERR_DIV_BY_ZERO;
         }
-        vm->stack[vm->sp - 1] %= a;
+        vm->dstack[vm->dsp - 1] %= a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SHL: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = b << a;
+        vm->dstack[vm->dsp++] = b << a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SHR: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = b >> a;
+        vm->dstack[vm->dsp++] = b >> a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_BOR: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = b | a;
+        vm->dstack[vm->dsp++] = b | a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_BAND: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = b & a;
+        vm->dstack[vm->dsp++] = b & a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_XOR: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = b ^ a;
+        vm->dstack[vm->dsp++] = b ^ a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_BNOT: {
-        if (vm->sp < 1) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 1) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = ~a;
+        vm->dstack[vm->dsp++] = ~a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LOR: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = b || a;
+        vm->dstack[vm->dsp++] = b || a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LAND: {
-        if (vm->sp < 2) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 2) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = b && a;
+        vm->dstack[vm->dsp++] = b && a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LNOT: {
-        if (vm->sp < 1) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp < 1) {
+            return ERR_DSTACK_UNDERFLOW;
         }
 
-        LopsinValue a = vm->stack[--vm->sp];
+        LopsinValue a = vm->dstack[--vm->dsp];
 
-        vm->stack[vm->sp++] = !a;
+        vm->dstack[vm->dsp++] = !a;
         vm->ip++;
     } break;
 
 
     case LOPSIN_INST_GT: {
-        if (vm->sp < 2) return ERR_STACK_UNDERFLOW;
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
-        vm->stack[vm->sp++] = b > a;
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp++] = b > a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LT: {
-        if (vm->sp < 2) return ERR_STACK_UNDERFLOW;
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
-        vm->stack[vm->sp++] = b < a;
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp++] = b < a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_GTE: {
-        if (vm->sp < 2) return ERR_STACK_UNDERFLOW;
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
-        vm->stack[vm->sp++] = b >= a;
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp++] = b >= a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LTE: {
-        if (vm->sp < 2) return ERR_STACK_UNDERFLOW;
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
-        vm->stack[vm->sp++] = b <= a;
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp++] = b <= a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_EQ: {
-        if (vm->sp < 2) return ERR_STACK_UNDERFLOW;
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
-        vm->stack[vm->sp++] = b == a;
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp++] = b == a;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_NEQ: {
-        if (vm->sp < 2) return ERR_STACK_UNDERFLOW;
-        LopsinValue a = vm->stack[--vm->sp];
-        LopsinValue b = vm->stack[--vm->sp];
-        vm->stack[vm->sp++] = b != a;
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        LopsinValue b = vm->dstack[--vm->dsp];
+        vm->dstack[vm->dsp++] = b != a;
         vm->ip++;
     } break;
 
@@ -384,10 +388,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_CJMP: {
-        if (vm->sp <= 0) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp <= 0) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        if (vm->stack[vm->sp - 1]) {
+        if (vm->dstack[vm->dsp - 1]) {
             vm->ip = inst.operand;
         } else {
             vm->ip++;
@@ -399,29 +403,42 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_CRJMP: {
-        if (vm->sp <= 0) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp <= 0) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        if (vm->stack[vm->sp - 1]) {
+        if (vm->dstack[vm->dsp - 1]) {
             vm->ip += inst.operand;
         } else {
             vm->ip++;
         }
     } break;
 
+    case LOPSIN_INST_CALL: {
+        if (vm->rsp >= vm->rstack_cap) return ERR_RSTACK_OVERFLOW;
+
+        vm->rstack[vm->rsp++] = vm->ip + 1;
+        vm->ip = inst.operand;
+    } break;
+
+    case LOPSIN_INST_RET: {
+        if (vm->rsp <= 0) return ERR_RSTACK_UNDERFLOW;
+
+        vm->ip = vm->rstack[--vm->rsp];
+    } break;
+
     case LOPSIN_INST_DUMP: {
-        if (vm->sp <= 0) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp <= 0) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        printf("%"PRId64"\n", vm->stack[--vm->sp]);
+        printf("%"PRId64"\n", vm->dstack[--vm->dsp]);
         vm->ip++;
     } break;
 
     case LOPSIN_INST_PUTC: {
-        if (vm->sp <= 0) {
-            return ERR_STACK_UNDERFLOW;
+        if (vm->dsp <= 0) {
+            return ERR_DSTACK_UNDERFLOW;
         }
-        printf("%c", (char) vm->stack[--vm->sp]);
+        printf("%c", (char) vm->dstack[--vm->dsp]);
         vm->ip++;
     } break;
 
@@ -454,16 +471,22 @@ LopsinVM lopsinvm_new(void)
 {
     return (LopsinVM) {
         .debug_mode = false,
+        .running = false,
+        
         .ip = 0,
         .program = {
             .insts = NULL,
             .count = 0,
             .cap = 0,
         },
-        .running = false,
-        .sp = 0,
-        .stack = NOTNULL(calloc(LOPSINVM_DEFAULT_STACK_CAP, sizeof(LopsinValue))),
-        .stack_cap = LOPSINVM_DEFAULT_STACK_CAP,
+        
+        .dsp = 0,
+        .dstack = NOTNULL(calloc(LOPSINVM_DEFAULT_DSTACK_CAP, sizeof(LopsinValue))),
+        .dstack_cap = LOPSINVM_DEFAULT_DSTACK_CAP,
+
+        .rsp = 0,
+        .rstack = NOTNULL(calloc(LOPSINVM_DEFAULT_RSTACK_CAP, sizeof(size_t))),
+        .rstack_cap = LOPSINVM_DEFAULT_RSTACK_CAP,
     };
 }
 

@@ -1,10 +1,15 @@
-jmp label
+jmp main
+
+putcstr:
+    putc
+    cjmp putcstr
+    ret
+
+main:
+push 0
 push 10
 push 97
-putc
-putc
 
-label: 
-push 98
-putc
+call putcstr
+
 hlt

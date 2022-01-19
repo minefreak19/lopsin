@@ -19,9 +19,12 @@ typedef int64_t LopsinValue;
 typedef enum {
     ERR_OK = 0,
 
-    ERR_STACK_UNDERFLOW,
-    ERR_STACK_OVERFLOW,
+    ERR_DSTACK_UNDERFLOW,
+    ERR_DSTACK_OVERFLOW,
 
+    ERR_RSTACK_UNDERFLOW,
+    ERR_RSTACK_OVERFLOW,
+    
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
     ERR_HALTED,
@@ -68,7 +71,9 @@ typedef enum {
     LOPSIN_INST_CJMP,
     LOPSIN_INST_RJMP,
     LOPSIN_INST_CRJMP,
-    
+    LOPSIN_INST_CALL,
+    LOPSIN_INST_RET,
+
     LOPSIN_INST_DUMP,
     LOPSIN_INST_PUTC,
 
@@ -81,7 +86,8 @@ typedef struct {
 } LopsinInst;
 
 #define LOPSINVM_DEFAULT_PROGRAM_COUNT 1024
-#define LOPSINVM_DEFAULT_STACK_CAP 1024 
+#define LOPSINVM_DEFAULT_DSTACK_CAP 1024
+#define LOPSINVM_DEFAULT_RSTACK_CAP 1024
 
 typedef struct {
     LopsinInst *insts;
@@ -90,14 +96,23 @@ typedef struct {
 } LopsinVMProgram;
 
 typedef struct {
-    LopsinValue *stack;
-    size_t stack_cap;
-    size_t sp;
+    /// Data stack.
+    LopsinValue *dstack;
+    size_t dstack_cap;
+    size_t dsp;
 
+    /// Return stack.
+    size_t *rstack;
+    size_t rstack_cap;
+    size_t rsp;
+
+    /// Program.
     LopsinVMProgram program;
 
+    /// Instruction pointer.
     size_t ip;
 
+    /// flags
     bool debug_mode;
     bool running;
 } LopsinVM;

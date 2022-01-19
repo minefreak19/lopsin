@@ -13,7 +13,7 @@ typedef LopAsm_Label Label;
 
 static bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 32, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -40,6 +40,7 @@ static bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_NEQ:
     case LOPSIN_INST_DUMP:
     case LOPSIN_INST_PUTC:
+    case LOPSIN_INST_RET:
         return false;
 
     case LOPSIN_INST_PUSH:
@@ -50,6 +51,7 @@ static bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_CJMP:
     case LOPSIN_INST_RJMP:
     case LOPSIN_INST_CRJMP:
+    case LOPSIN_INST_CALL:
         return true;
 
     default: {
