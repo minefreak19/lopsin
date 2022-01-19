@@ -4,6 +4,12 @@
 #include <string.h>
 #include <errno.h>
 
+#define SV_IMPLEMENTATION
+#include <sv.h>
+// <sv.h> is included by lopasm.h
+#undef SV_IMPLEMENTATION 
+
+#define BUFFER_IMPLEMENTATION
 #include <buffer.h>
 
 #include "./lopasm.h"
