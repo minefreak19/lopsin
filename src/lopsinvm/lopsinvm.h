@@ -14,6 +14,8 @@ extern "C"
 {
 #endif /* __cplusplus */
 
+#define LOPSINVM_BYTECODE_MAGIC "\105\114\117\120\122\151\102\141"
+
 typedef int64_t LopsinValue;
 
 typedef enum {

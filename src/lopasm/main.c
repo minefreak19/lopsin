@@ -71,6 +71,8 @@ int main(int argc, const char **argv)
     {
         Buffer *output_buf = new_buffer(0);
 
+        buffer_append_cstr(output_buf, LOPSINVM_BYTECODE_MAGIC);
+
         LopsinInst inst = {0};
         do {
             success = lopasm_parser_spit_inst(parser, &inst);

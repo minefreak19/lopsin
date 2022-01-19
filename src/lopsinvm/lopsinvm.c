@@ -7,6 +7,14 @@
 #include <string.h>
 #include <errno.h>
 
+#define BUFFERDEF static inline
+#define BUFFER_IMPLEMENTATION
+#include <buffer.h>
+
+#define SVDEF static inline
+#define SV_IMPLEMENTATION
+#include <sv.h>
+
 #include "util.h"
 
 static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
@@ -490,69 +498,126 @@ LopsinVM lopsinvm_new(void)
     };
 }
 
+static inline bool sv_try_chop_by_sv_left(String_View *sv, 
+                                   const String_View thicc_delim, 
+                                   String_View *out)
+{
+    String_View window = sv_from_parts(sv->data, thicc_delim.count);
+    size_t i = 0;
+    while (i + thicc_delim.count < sv->count 
+        && !(sv_eq(window, thicc_delim))) 
+    {
+        i++;
+        window.data++;
+    }
+
+    String_View result = sv_from_parts(sv->data, i);
+
+    if (i + thicc_delim.count == sv->count) {
+        return false;
+    }
+    
+    // Chop!
+    sv->data  += i + thicc_delim.count;
+    sv->count -= i + thicc_delim.count;
+
+    if (out) *out = result;
+    return true;
+}
+
 void lopsinvm_load_program_from_file(LopsinVM *vm, const char *path)
 {
-    FILE *file = fopen(path, "rb");
-    if (file == NULL) {
-        fprintf(stderr, "ERROR: Could not open file %s: %s\n", 
-                path, strerror(errno));
+    Buffer *buf = new_buffer(0);
+
+    buffer_append_file(buf, path);
+
+    String_View bytecode = sv_from_parts(buf->data, buf->size);
+    const String_View magic = SV_STATIC(LOPSINVM_BYTECODE_MAGIC);
+
+    if (sv_try_chop_by_sv_left(&bytecode, magic, NULL)) {
+        size_t count = bytecode.count / sizeof(LopsinInst);
+        LopsinVMProgram program = {
+            .cap   = count,
+            .count = count,
+            .insts = NOTNULL(malloc(bytecode.count)),
+        };
+
+        memcpy(program.insts, bytecode.data, bytecode.count);
+
+        vm->program = program;
+    } else {
+        fprintf(stderr, "ERROR: Could not load program from file %s: %s\n",
+                path, "Incorrect format");
         exit(1);
     }
 
-    if (fseek(file, 0, SEEK_END) < 0) {
-        fprintf(stderr, "ERROR: Could not read file %s: %s\n",
-            path, strerror(errno));
-        fclose(file);
-        exit(1);
-    }
-
-    long len = ftell(file);
-
-    if (len < 0) {
-        fprintf(stderr, "ERROR: Could not read file %s: %s\n",
-            path, strerror(errno));
-
-        fclose(file);
-        exit(1);
-    }
-
-    if (fseek(file, 0, SEEK_SET) < 0) {
-        fprintf(stderr, "ERROR: Could not read file %s: %s\n",
-            path, strerror(errno));
-        fclose(file);
-        exit(1);
-    }
-
-    LopsinInst *contents = NOTNULL(malloc(len));
-    if (fread(contents, 1, len, file) < (size_t)len) {
-        if (ferror(file)) {
-            fprintf(stderr, "ERROR: Could not read file %s: %s\n",
-                path, strerror(errno));
-        } else if (feof(file)) {
-            fprintf(stderr, "ERROR: Could not read file %s: %s\n",
-                    path, "Reached end of file");
-        } else {
-            assert(false && "Unreachable");
-        }
-        fclose(file);
-        free(contents);
-        exit(1);
-    }
-
-    fclose(file);
-
-    size_t count = len / sizeof(LopsinInst);
-
-    LopsinVMProgram program = {
-        .count = count,
-        .cap   = count,
-    };
-
-    program.insts = NOTNULL(malloc(count * sizeof(LopsinInst)));
-
-    memcpy(program.insts, contents, count * sizeof(LopsinInst));
-
-    vm->program = program;
-
-    free(contents);
+    buffer_clear(buf);
+    buffer_free(buf);
 }
+
+// void lopsinvm_load_program_from_file(LopsinVM *vm, const char *path)
+// {
+//     FILE *file = fopen(path, "rb");
+//     if (file == NULL) {
+//         fprintf(stderr, "ERROR: Could not open file %s: %s\n", 
+//                 path, strerror(errno));
+//         exit(1);
+//     }
+
+//     if (fseek(file, 0, SEEK_END) < 0) {
+//         fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+//             path, strerror(errno));
+//         fclose(file);
+//         exit(1);
+//     }
+
+//     long len = ftell(file);
+
+//     if (len < 0) {
+//         fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+//             path, strerror(errno));
+
+//         fclose(file);
+//         exit(1);
+//     }
+
+//     if (fseek(file, 0, SEEK_SET) < 0) {
+//         fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+//             path, strerror(errno));
+//         fclose(file);
+//         exit(1);
+//     }
+
+//     LopsinInst *contents = NOTNULL(malloc(len));
+//     if (fread(contents, 1, len, file) < (size_t)len) {
+//         if (ferror(file)) {
+//             fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+//                 path, strerror(errno));
+//         } else if (feof(file)) {
+//             fprintf(stderr, "ERROR: Could not read file %s: %s\n",
+//                     path, "Reached end of file");
+//         } else {
+//             assert(false && "Unreachable");
+//         }
+//         fclose(file);
+//         free(contents);
+//         exit(1);
+//     }
+
+//     fclose(file);
+
+//     size_t count = len / sizeof(LopsinInst);
+
+//     LopsinVMProgram program = {
+//         .count = count,
+//         .cap   = count,
+//     };
+
+//     program.insts = NOTNULL(malloc(count * sizeof(LopsinInst)));
+
+//     memcpy(program.insts, contents, count * sizeof(LopsinInst));
+
+//     vm->program = program;
+
+//     free(contents);
+// }
