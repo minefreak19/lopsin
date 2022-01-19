@@ -11,7 +11,9 @@
 #define MODULE_DEBUG_CFLAGS DEBUG_CFLAGS
 #define MODULE_INCLUDES C_INCLUDES
 
-#define EXTRA_SRCFILES PATH(SRCDIR, "lopsinvm", "lopsinvm.c")
+#define EXTRA_SRCFILES                          \
+    PATH(SRCDIR, "lopsinvm", "lopsinvm.c"),     \
+    PATH(SRCDIR, "common", "util.c")
 
 int main(int argc, const char **argv)
 {

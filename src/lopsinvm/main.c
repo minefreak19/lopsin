@@ -1,6 +1,7 @@
 #include "lopsinvm.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "util.h"
