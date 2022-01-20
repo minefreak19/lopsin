@@ -63,19 +63,19 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
 
 static_assert(COUNT_LOPSIN_ERRS == 10, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
 const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
-    [ERR_OK]              = "OK",
+    [ERR_OK]                = "OK",
 
-    [ERR_DSTACK_UNDERFLOW] = "Data stack underflow",
-    [ERR_DSTACK_OVERFLOW]  = "Data stack overflow",
-    [ERR_RSTACK_UNDERFLOW] = "Return stack underflow",
-    [ERR_RSTACK_OVERFLOW]  = "Return stack overflow",
+    [ERR_DSTACK_UNDERFLOW]  = "Data stack underflow",
+    [ERR_DSTACK_OVERFLOW]   = "Data stack overflow",
+    [ERR_RSTACK_UNDERFLOW]  = "Return stack underflow",
+    [ERR_RSTACK_OVERFLOW]   = "Return stack overflow",
 
-    [ERR_ILLEGAL_INST]    = "Illegal instruction",
-    [ERR_BAD_INST_PTR]    = "Bad instruction pointer",
-    [ERR_HALTED]          = "Already halted",
-    [ERR_INVALID_OPERAND]     = "Invalid operand for operation",
+    [ERR_ILLEGAL_INST]      = "Illegal instruction",
+    [ERR_BAD_INST_PTR]      = "Bad instruction pointer",
+    [ERR_HALTED]            = "Already halted",
+    [ERR_INVALID_OPERAND]   = "Invalid operand for operation",
 
-    [ERR_DIV_BY_ZERO]     = "Division by zero",
+    [ERR_DIV_BY_ZERO]       = "Division by zero",
 };
 
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
