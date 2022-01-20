@@ -112,6 +112,15 @@ static bool lex_tok_as_identifier(Token *tok)
 bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 {
     lexer->source = sv_trim_left(lexer->source);
+
+    if (sv_starts_with(lexer->source, (String_View) SV_STATIC("//")) 
+        || sv_starts_with(lexer->source, (String_View) SV_STATIC("#"))
+        || sv_starts_with(lexer->source, (String_View) SV_STATIC(";")))
+    {
+        sv_chop_by_delim(&lexer->source, '\n');
+        lexer->source = sv_trim_left(lexer->source);
+    }
+
     if (lexer->source.count == 0) return false;
 
     Token result;

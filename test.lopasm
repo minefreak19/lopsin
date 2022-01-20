@@ -5,8 +5,12 @@ putcstr:
     cjmp putcstr
     ret
 
+# this is a comment
+; so is this!
+// and this :D
+
 main:
-    push 0
+    push 0 
     push 10
     push 97
     push 98
