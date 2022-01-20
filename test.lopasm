@@ -10,14 +10,14 @@ putcstr:
 // and this :D
 
 main:
-    push 0 
-    push 10
-    push 97
-    push 98
-    push 99
-    push 65
-    push 66
-    push 67
+    push '\0 # this compiles, but i'm too lazy to report an error
+    push '\u000a'
+    push 'a'
+    push 'b'
+    push 'c'
+    push 'A'
+    push 'B'
+    push 'C'
 
     call putcstr
 

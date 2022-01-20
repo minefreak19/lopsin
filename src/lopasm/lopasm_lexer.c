@@ -26,7 +26,7 @@ static inline String_View sv_chop_by_whitespace(String_View *sv)
     return sv_chop_left_while(sv, notisspace);
 }
 
-static bool sv_try_chop_i64(String_View *sv, int64_t *out)
+static bool sv_try_chop_i64(String_View *sv, int radix, int64_t *out)
 {
     char *contents = NOTNULL(malloc((sv->count + 1) * sizeof(char)));
     
@@ -34,7 +34,7 @@ static bool sv_try_chop_i64(String_View *sv, int64_t *out)
     contents[sv->count] = '\0';
 
     char *endptr = NULL;
-    int64_t result = strtoll(contents, &endptr, 0);
+    int64_t result = strtoll(contents, &endptr, radix);
 
     size_t len = endptr - contents;
     free(contents);
@@ -48,6 +48,63 @@ static bool sv_try_chop_i64(String_View *sv, int64_t *out)
     }
 
     return true;
+}
+
+static char parse_char_lit(String_View chartext)
+{
+    if (!sv_eq(sv_chop_left(&chartext, 1), 
+               (String_View) SV_STATIC("'")))
+    {
+        return '\0';
+    }
+
+    bool escape = false;
+    while (chartext.count > 0) {
+        char c = sv_chop_left(&chartext, 1).data[0];
+
+        if (escape) {
+            escape = false;
+            switch (c) {
+                case '\\': return '\\';
+                case 'n':  return '\n';
+                case 't':  return '\t';
+                case 'u': {
+                    assert(chartext.count > 0);
+                    int64_t result;
+                    if (sv_try_chop_i64(&chartext, 16, &result)) {
+                        return (char) result;
+                    } else {
+                        fprintf(stderr, "ERROR: invalid escape sequence `"SV_Fmt"`\n",
+                                SV_Arg(chartext));
+                        exit(1);
+                    }
+                }
+
+                default: {
+                    chartext.data--;
+                    chartext.count++;
+                    assert(chartext.count > 0);
+                    int64_t result;
+                    if (sv_try_chop_i64(&chartext, 8, &result)) {
+                        return (char) result;
+                    } else {
+                        fprintf(stderr, "ERROR: invalid escape sequence `"SV_Fmt"`\n",
+                                SV_Arg(chartext));
+                        exit(1);
+                    }
+                }
+            }
+        }
+        switch (c) {
+            case '\\': escape = true; continue;
+
+            default: {
+                return c;
+            }
+        }
+    }
+
+    return '\0';
 }
 
 static bool lex_tok_as_inst(Token *tok)
@@ -68,7 +125,7 @@ static bool lex_tok_as_inst(Token *tok)
 static bool lex_tok_as_i64(Token *tok)
 {
     String_View tok_text = tok->text;
-    if (!sv_try_chop_i64(&tok_text, &tok->as.lit_int.value)) {
+    if (!sv_try_chop_i64(&tok_text, 0, &tok->as.lit_int.value)) {
         return false;
     }
 
@@ -78,6 +135,40 @@ static bool lex_tok_as_i64(Token *tok)
 
     tok->type = LOPASM_TOKEN_TYPE_LIT_INT;
     return true;
+}
+
+static bool lex_tok_as_char(Token *tok)
+{
+    String_View toktext = tok->text;
+
+    if (tok->text.data[0] != '\'') return false;
+
+    tok->as.lit_int.value = parse_char_lit(toktext);
+    tok->type = LOPASM_TOKEN_TYPE_LIT_INT;
+
+    return true;
+
+    /*
+    String_View chartext = sv_chop_by_delim(&toktext, '\'');
+    if (chartext.count == 0) {
+        fprintf(stderr, "ERROR: empty character literal\n");
+        exit(1);
+    }
+
+    if (chartext.data[0] == '\\') {
+
+    } else {
+        if (chartext.count > 1) {
+            fprintf(stderr, "ERROR: invalid character literal\n");
+            exit(1);
+        }
+
+        tok->as.lit_int.value = (int) chartext.data[0];
+    }
+
+    // no true 'char' type in lexer, may change in future if necessary
+    tok->type = LOPASM_TOKEN_TYPE_LIT_INT; 
+    return true; */
 }
 
 static bool lex_tok_as_label_def(Token *tok)
@@ -134,6 +225,7 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 
     if (lex_tok_as_inst(&result)) {
     } else if (lex_tok_as_i64(&result)) {
+    } else if (lex_tok_as_char(&result)) {  
     } else if (lex_tok_as_label_def(&result)) {
     } else if (lex_tok_as_identifier(&result)) {
     } else {
