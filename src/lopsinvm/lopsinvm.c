@@ -498,6 +498,15 @@ LopsinVM lopsinvm_new(void)
     };
 }
 
+void lopsinvm_free(LopsinVM *vm)
+{
+    assert(!vm->running);
+
+    free(vm->dstack);
+    free(vm->rstack);
+    free(vm->program.insts);
+}
+
 static inline bool sv_try_chop_by_sv_left(String_View *sv, 
                                    const String_View thicc_delim, 
                                    String_View *out)

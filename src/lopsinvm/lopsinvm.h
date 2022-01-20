@@ -127,6 +127,7 @@ extern const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES];
 extern const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS];
 
 LopsinVM lopsinvm_new(void);
+void lopsinvm_free(LopsinVM *);
 
 void lopsinvm_load_program_from_file(LopsinVM *, const char *path);
 
