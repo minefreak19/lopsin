@@ -93,6 +93,55 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
     }
 }
 
+bool requires_operand(LopsinInstType insttype)
+{
+    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in requires_operand");
+
+    switch (insttype) {
+    case LOPSIN_INST_NOP:
+    case LOPSIN_INST_HLT:
+    case LOPSIN_INST_SUM:
+    case LOPSIN_INST_SUB:
+    case LOPSIN_INST_MUL:
+    case LOPSIN_INST_DIV:
+    case LOPSIN_INST_MOD:
+    case LOPSIN_INST_SHL:
+    case LOPSIN_INST_SHR:
+    case LOPSIN_INST_BOR:
+    case LOPSIN_INST_BAND:
+    case LOPSIN_INST_XOR:
+    case LOPSIN_INST_BNOT:
+    case LOPSIN_INST_LOR:
+    case LOPSIN_INST_LAND:
+    case LOPSIN_INST_LNOT:
+    case LOPSIN_INST_GT:
+    case LOPSIN_INST_LT:
+    case LOPSIN_INST_GTE:
+    case LOPSIN_INST_LTE:
+    case LOPSIN_INST_EQ:
+    case LOPSIN_INST_NEQ:
+    case LOPSIN_INST_DUMP:
+    case LOPSIN_INST_PUTC:
+    case LOPSIN_INST_RET:
+        return false;
+
+    case LOPSIN_INST_PUSH:
+    case LOPSIN_INST_DROP:
+    case LOPSIN_INST_DUP:
+    case LOPSIN_INST_SWAP:
+    case LOPSIN_INST_JMP:
+    case LOPSIN_INST_CJMP:
+    case LOPSIN_INST_RJMP:
+    case LOPSIN_INST_CRJMP:
+    case LOPSIN_INST_CALL:
+        return true;
+
+    default: {
+        CRASH("unreachable");
+    }
+    }
+}
+
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
     static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
