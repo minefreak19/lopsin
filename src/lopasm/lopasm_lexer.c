@@ -119,6 +119,7 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
     {
         sv_chop_by_delim(&lexer->source, '\n');
         lexer->source = sv_trim_left(lexer->source);
+        return lopasm_lexer_spit_token(lexer, out);
     }
 
     if (lexer->source.count == 0) return false;
