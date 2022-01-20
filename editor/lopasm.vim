@@ -11,6 +11,11 @@ syntax match lopasmLabel "\w\+:"
 
 syntax match lopasmLitInt "[+-]\?\d\+"
 
+syntax match lopasmComment "//.*$"
+syntax match lopasmComment "#.*$"
+syntax match lopasmComment ";.*$"
+
 highlight default link lopasmKeywords	Statement
 highlight default link lopasmLabel 	Function
 highlight default link lopasmLitInt	Constant
+highlight default link lopasmComment Comment
