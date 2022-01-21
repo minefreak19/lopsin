@@ -147,28 +147,6 @@ static bool lex_tok_as_char(Token *tok)
     tok->type = LOPASM_TOKEN_TYPE_LIT_INT;
 
     return true;
-
-    /*
-    String_View chartext = sv_chop_by_delim(&toktext, '\'');
-    if (chartext.count == 0) {
-        fprintf(stderr, "ERROR: empty character literal\n");
-        exit(1);
-    }
-
-    if (chartext.data[0] == '\\') {
-
-    } else {
-        if (chartext.count > 1) {
-            fprintf(stderr, "ERROR: invalid character literal\n");
-            exit(1);
-        }
-
-        tok->as.lit_int.value = (int) chartext.data[0];
-    }
-
-    // no true 'char' type in lexer, may change in future if necessary
-    tok->type = LOPASM_TOKEN_TYPE_LIT_INT; 
-    return true; */
 }
 
 static bool lex_tok_as_label_def(Token *tok)
@@ -237,17 +215,9 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 }
 
 void lopasm_print_token(FILE *stream, Token token)
-#ifdef _DEBUG
 {
     fprintf(stream, 
         "Token (%02d):\t`"SV_Fmt"`\n",
             token.type, 
             SV_Arg(token.text));
 }
-#else
-{
-    (void) stream;
-    (void) token;
-    return;
-}
-#endif
