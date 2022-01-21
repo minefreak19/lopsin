@@ -15,7 +15,10 @@ syntax match lopasmComment "//.*$"
 syntax match lopasmComment "#.*$"
 syntax match lopasmComment ";.*$"
 
+syntax region lopasmChar start='\'' end='\''
+
 highlight default link lopasmKeywords	Statement
 highlight default link lopasmLabel 	Function
 highlight default link lopasmLitInt	Constant
 highlight default link lopasmComment Comment
+highlight default link lopasmChar 	Constant
