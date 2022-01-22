@@ -61,7 +61,7 @@ int main(int argc, const char **argv)
 
     lopsinvm_load_program_from_file(&vm, args.input_file);
 
-    lopsinvm_start(&vm);
+    LopsinErr errlvl = lopsinvm_start(&vm);
 
-    return 0;
+    return errlvl;
 }
