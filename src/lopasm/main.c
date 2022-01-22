@@ -1,8 +1,18 @@
+
+#if defined __linux__ || (defined __APPLE__ && defined __MACH__)
+#   define _GNU_SOURCE
+
+#   include <sys/wait.h>
+#   include <signal.h>
+#elif defined _WIN32
+
+#endif // defined(__linux__) || (defined __APPLE__ && defined __MACH__)
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <errno.h>
+#include <string.h>
 
 #define SV_IMPLEMENTATION
 #include <sv.h>
@@ -22,7 +32,9 @@ static void usage(FILE *stream, const char *program_name)
         "OPTIONS:\n"
         "   --debug, -d             Enable debugging mode\n"
         "   --help,  -h             Print this help message and exit\n"
-        "   --vm <vm.exe>           Use a shebang pointing to <vm.exe> (this does nothing smart with the working directory, exercise caution)\n");
+        "   --run,   -r             Run program after compilation (requries --vm)\n"
+        "   --vm <vm.exe>           Use a shebang pointing to <vm.exe> (this does nothing smart with the working directory, exercise caution)\n"
+    );
 }
 
 #define cstreq(a, b) (strcmp(a, b) == 0)
@@ -39,6 +51,7 @@ int main(int argc, const char **argv)
         
         const char *vm_path;
         bool debug_mode;
+        bool run;
     } args = {0};
 
     while (*argv != NULL) {
@@ -68,6 +81,8 @@ int main(int argc, const char **argv)
                 fprintf(stderr, "ERROR: trailing `--vm` without vm executable\n");
                 exit(1);
             }
+        } else if (cstreq(arg, "--run") || cstreq(arg, "-r")) {
+            args.run = true;
         } else {
             // TODO: lopasm does not support multiple compilation units
             if (args.input_path != NULL) {
@@ -166,6 +181,65 @@ int main(int argc, const char **argv)
     buffer_free(input_buf);
 
     printf("Compiled %s -> %s successfully.\n", args.input_path, args.output_path);
+
+    if (args.run) {
+        if (args.vm_path == NULL) {
+            usage(stderr, program_name);
+            fprintf(stderr, "ERROR: option `--run` requires `--vm` specified\n");
+            exit(1);
+        }
+
+        printf("Running program...\n");
+        {
+            Buffer *cmd_path_buf = new_buffer(0);
+
+            // we're assuming vm_path is properly relative ie ./bin/lopsinvm, not bin/lopsinvm
+            buffer_append_cstr(cmd_path_buf, args.vm_path); 
+            buffer_append_char(cmd_path_buf, ' ');
+            buffer_append_cstr(cmd_path_buf, args.output_path);
+            buffer_append_char(cmd_path_buf, '\0');
+
+            printf("[CMD] %s\n", cmd_path_buf->data);
+            int status = system(cmd_path_buf->data);
+
+#           if defined __linux__ || (defined __APPLE__ && defined __MACH__)
+            {
+                if (WIFEXITED(status)) {
+                    int code = WEXITSTATUS(status);
+                    if (code != 0) {
+                        printf("Process \033[91;1mexited abnormally\033[0m with code \033[91;1m%d\033[0m.\n",
+                            code);
+                    } else {
+                        printf("Process exited \033[92;1mnormally\033[0m.\n");
+                    }
+                } else if (WIFSIGNALED(status)) {
+                    int signal = WTERMSIG(status);
+                    printf("Process terminated by %s\n", strsignal(signal));
+                }
+            }
+#           elif defined _WIN32
+            {
+                if (status != 0) {
+                    printf("Process \033[91;1mexited abnormally\033[0m with code \033[91;1m%d\033[0m.\n",
+                           status);
+                } else {
+                    printf("Process exited \033[92;1mnormally\033[0m.\n");
+                }
+            }
+#           else 
+#           error posix or windows pls
+#           endif
+
+            if (status < 0) {
+                fprintf(stderr, "ERROR: Could not execute command `%s`: %s", 
+                        cmd_path_buf->data, strerror(errno));
+                exit(1);
+            }
+
+            buffer_clear(cmd_path_buf);
+            buffer_free(cmd_path_buf);
+        }
+    }
 
     return 0;
 }
