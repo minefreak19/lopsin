@@ -448,7 +448,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
-        if (vm->dstack[vm->dsp - 1]) {
+        if (vm->dstack[--vm->dsp]) {
             vm->ip = inst.operand;
         } else {
             vm->ip++;
@@ -463,7 +463,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
-        if (vm->dstack[vm->dsp - 1]) {
+        if (vm->dstack[--vm->dsp]) {
             vm->ip += inst.operand;
         } else {
             vm->ip++;
