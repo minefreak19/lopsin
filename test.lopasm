@@ -3,6 +3,7 @@ jmp main
 putcstr:
     putc
     dup 1
+    cast 1
     cjmp putcstr
     ret
 

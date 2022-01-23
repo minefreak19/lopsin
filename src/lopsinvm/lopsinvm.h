@@ -95,6 +95,8 @@ typedef enum {
     LOPSIN_INST_CALL,
     LOPSIN_INST_RET,
 
+    LOPSIN_INST_CAST,
+
     LOPSIN_INST_DUMP,
     LOPSIN_INST_PUTC,
 

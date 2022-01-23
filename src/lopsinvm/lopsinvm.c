@@ -17,7 +17,7 @@
 
 #include "util.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -56,6 +56,8 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_CRJMP]         = "crjmp",
     [LOPSIN_INST_CALL]          = "call",
     [LOPSIN_INST_RET]           = "ret",
+
+    [LOPSIN_INST_CAST]          = "cast",
 
     [LOPSIN_INST_DUMP]          = "dump",
     [LOPSIN_INST_PUTC]          = "putc",
@@ -100,7 +102,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -139,6 +141,7 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_RJMP:
     case LOPSIN_INST_CRJMP:
     case LOPSIN_INST_CALL:
+    case LOPSIN_INST_CAST:
         return true;
 
     default: {
@@ -149,7 +152,7 @@ bool requires_operand(LopsinInstType insttype)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     
     if (!vm->running) {
         return ERR_HALTED;
@@ -702,6 +705,18 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (vm->rsp <= 0) return ERR_RSTACK_UNDERFLOW;
 
         vm->ip = vm->rstack[--vm->rsp];
+    } break;
+
+    case LOPSIN_INST_CAST: {
+        if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+
+        if (!(0 < inst.operand.as.i64 && inst.operand.as.i64 < COUNT_LOPSIN_TYPES)) 
+            return ERR_INVALID_OPERAND;
+
+        vm->dstack[vm->dsp - 1].type = inst.operand.as.i64;
+
+        vm->ip++;
     } break;
 
     case LOPSIN_INST_DUMP: {
