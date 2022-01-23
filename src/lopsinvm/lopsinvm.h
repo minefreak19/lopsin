@@ -8,6 +8,7 @@ Created 05 January 2022
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -16,7 +17,22 @@ extern "C"
 
 #define LOPSINVM_BYTECODE_MAGIC "\105\114\117\120\122\151\102\141"
 
-typedef int64_t LopsinValue;
+// TODO: lopsinvm has no boolean type
+typedef enum {
+    // LOPSIN_TYPE_ANY = 0,
+    LOPSIN_TYPE_I64,
+
+    COUNT_LOPSIN_TYPES
+} LopsinType;
+
+typedef union {
+    int64_t i64;
+} LopsinValueAs;
+
+typedef struct {
+    LopsinType type;
+    LopsinValueAs as;
+} LopsinValue;
 
 typedef enum {
     ERR_OK = 0,
@@ -31,6 +47,7 @@ typedef enum {
     ERR_BAD_INST_PTR,
     ERR_HALTED,
     ERR_INVALID_OPERAND,
+    ERR_INVALID_TYPE,
 
     ERR_DIV_BY_ZERO,
 
@@ -127,6 +144,7 @@ extern const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES];
 extern const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS];
 
 bool requires_operand(LopsinInstType insttype);
+void lopsinvalue_print(FILE *stream, LopsinValue);
 
 LopsinVM lopsinvm_new(void);
 void lopsinvm_free(LopsinVM *);

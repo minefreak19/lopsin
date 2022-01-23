@@ -88,7 +88,10 @@ static bool parse_identifier_value(const Parser *parser, Token token, LopsinValu
         Label label = parser->labels[i];
         if (sv_eq(token.as.identifier.name, label.name)) {
 
-            if (out) *out = (LopsinValue) label.loc;
+            if (out) *out = (LopsinValue) {
+                .type = LOPSIN_TYPE_I64,
+                .as.i64 = label.loc,
+            };
 
             return true;
         }
@@ -106,7 +109,10 @@ static bool parse_operand(const Parser *parser, Token token, LopsinValue *out)
         } break;
 
         case LOPASM_TOKEN_TYPE_LIT_INT: {
-            *out = token.as.lit_int.value;
+            if (out) *out = (LopsinValue) {
+                .type = LOPSIN_TYPE_I64,
+                .as.i64 = token.as.lit_int.value,
+            };
             return true;
         } break;
 

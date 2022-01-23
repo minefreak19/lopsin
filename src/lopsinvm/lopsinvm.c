@@ -61,7 +61,7 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_PUTC]          = "putc",
 };
 
-static_assert(COUNT_LOPSIN_ERRS == 10, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
+static_assert(COUNT_LOPSIN_ERRS == 11, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
 const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_OK]                = "OK",
 
@@ -74,6 +74,7 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_BAD_INST_PTR]      = "Bad instruction pointer",
     [ERR_HALTED]            = "Already halted",
     [ERR_INVALID_OPERAND]   = "Invalid operand for operation",
+    [ERR_INVALID_TYPE]      = "Invalid type for operation",
 
     [ERR_DIV_BY_ZERO]       = "Division by zero",
 };
@@ -89,7 +90,11 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
         vm->ip);
 
     for (size_t i = 0; i < vm->dsp; i++) {
-        fprintf(stream, "\t%"PRId64"\n", vm->dstack[i]);
+        LopsinValue a = vm->dstack[i];
+
+        fprintf(stream, "\t");
+        lopsinvalue_print(stream, a);
+        fprintf(stream, "\n");
     }
 }
 
@@ -156,9 +161,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     LopsinInst inst = vm->program.insts[vm->ip];
     
     if (vm->debug_mode) {
-        fprintf(stdout, "Current instruction: %s %"PRId64"\n", 
-            LOPSIN_INST_TYPE_NAMES[inst.type], 
-            inst.operand);
+        fprintf(stdout, "Current instruction: %s ", 
+            LOPSIN_INST_TYPE_NAMES[inst.type]);
+        lopsinvalue_print(stdout, inst.operand);
+        fprintf(stdout, "\n");
 
         lopvm_dump_stack(stdout, vm);
     }
@@ -182,49 +188,57 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_DROP: {
-        if (vm->dsp < (unsigned) inst.operand) {
+        if (inst.operand.type != LOPSIN_TYPE_I64 
+            || inst.operand.as.i64 < 0)
+        {
+            return ERR_INVALID_OPERAND;
+        }
+
+        if (vm->dsp < (unsigned) inst.operand.as.i64) {
             return ERR_DSTACK_UNDERFLOW;
         }
 
-        vm->dsp -= inst.operand;
+        vm->dsp -= inst.operand.as.i64;
         vm->ip++;
     } break;
 
     case LOPSIN_INST_DUP: {
-        if (inst.operand <= 0) {
+        if (inst.operand.type != LOPSIN_TYPE_I64 
+            || inst.operand.as.i64 <= 0) {
             return ERR_INVALID_OPERAND;
         }
 
-        if (vm->dsp + inst.operand >= vm->dstack_cap) {
+        if (vm->dsp + inst.operand.as.i64 >= vm->dstack_cap) {
             return ERR_DSTACK_OVERFLOW;
         }
 
-        if ((LopsinValue) vm->dsp < inst.operand) {
+        if (vm->dsp < (unsigned) inst.operand.as.i64) {
             return ERR_DSTACK_UNDERFLOW;
         }
 
         size_t saved_sp = vm->dsp;
-        for (LopsinValue i = 0; i < inst.operand; i++) {
-            vm->dstack[vm->dsp++] = vm->dstack[saved_sp - (inst.operand - i)];
+        for (int64_t i = 0; i < inst.operand.as.i64; i++) {
+            vm->dstack[vm->dsp++] = vm->dstack[saved_sp - (inst.operand.as.i64 - i)];
         }
 
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SWAP: {
-        if (inst.operand <= 0) {
+        if (inst.operand.type != LOPSIN_TYPE_I64 || inst.operand.as.i64 <= 0) {
             return ERR_INVALID_OPERAND;
         }
 
-        if (vm->dsp < (2 * (size_t)inst.operand)) {
+        const size_t operand = (size_t)inst.operand.as.i64;
+        if (vm->dsp < (2 * operand)) {
             return ERR_DSTACK_UNDERFLOW;
         }
 
-        size_t swap_sz = inst.operand * sizeof(LopsinValue);
+        size_t swap_sz = operand * sizeof(LopsinValue);
         LopsinValue *temp = NOTNULL(malloc(swap_sz));
-        memcpy(temp, &vm->dstack[vm->dsp - (2 * inst.operand)], swap_sz);
-        memcpy(&vm->dstack[vm->dsp - (2 * inst.operand)], &vm->dstack[vm->dsp - inst.operand], swap_sz);
-        memcpy(&vm->dstack[vm->dsp - inst.operand], temp, swap_sz);
+        memcpy(temp, &vm->dstack[vm->dsp - (2 * operand)], swap_sz);
+        memcpy(&vm->dstack[vm->dsp - (2 * operand)], &vm->dstack[vm->dsp - operand], swap_sz);
+        memcpy(&vm->dstack[vm->dsp - operand], temp, swap_sz);
 
 
         // LopsinValue temp = vm->dstack[vm->dsp - 1];
@@ -235,246 +249,421 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_SUM: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp - 1] += a;
+        LopsinValue b = vm->dstack[--vm->dsp];
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 + a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SUB: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp - 1] -= a;
+        LopsinValue b = vm->dstack[--vm->dsp];
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 - a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_MUL: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp - 1] *= a;
+        LopsinValue b = vm->dstack[--vm->dsp];
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 * a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_DIV: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
-        if (a == 0) {
-            return ERR_DIV_BY_ZERO;
-        }
-        vm->dstack[vm->dsp - 1] /= a;
+        LopsinValue b = vm->dstack[--vm->dsp];
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        if (a.as.i64 == 0) return ERR_DIV_BY_ZERO;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 / a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_MOD: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
-        if (a == 0) {
-            return ERR_DIV_BY_ZERO;
-        }
-        vm->dstack[vm->dsp - 1] %= a;
+        LopsinValue b = vm->dstack[--vm->dsp];
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        if (a.as.i64 == 0) return ERR_DIV_BY_ZERO;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 % a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SHL: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = b << a;
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 << a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_SHR: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = b >> a;
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 >> a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_BOR: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = b | a;
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 | a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_BAND: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = b & a;
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 & a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_XOR: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = b ^ a;
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 ^ a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_BNOT: {
-        if (vm->dsp < 1) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = ~a;
-        vm->ip++;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as.i64 = ~a.as.i64,
+        };
     } break;
 
     case LOPSIN_INST_LOR: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = b || a;
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 || a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LAND: {
-        if (vm->dsp < 2) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = b && a;
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 && a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LNOT: {
-        if (vm->dsp < 1) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
 
         LopsinValue a = vm->dstack[--vm->dsp];
 
-        vm->dstack[vm->dsp++] = !a;
-        vm->ip++;
-    } break;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
 
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as.i64 = !a.as.i64,
+        };
+    } break;
 
     case LOPSIN_INST_GT: {
         if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp++] = b > a;
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 > a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LT: {
         if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp++] = b < a;
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 < a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_GTE: {
         if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp++] = b >= a;
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 >= a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_LTE: {
         if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp++] = b <= a;
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 <= a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_EQ: {
         if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp++] = b == a;
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 == a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_NEQ: {
         if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
-        vm->dstack[vm->dsp++] = b != a;
+
+        if (a.type != b.type) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
+        vm->dstack[vm->dsp++] = (LopsinValue) {
+            .type = a.type,
+            .as = {
+                .i64 = b.as.i64 != a.as.i64,
+            },
+        };
+
         vm->ip++;
     } break;
 
     case LOPSIN_INST_JMP: {
-        vm->ip = inst.operand;
+        if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        vm->ip = inst.operand.as.i64;
     } break;
 
     case LOPSIN_INST_CJMP: {
+        if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
-        if (vm->dstack[--vm->dsp]) {
-            vm->ip = inst.operand;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        if (a.as.i64) {
+            vm->ip = inst.operand.as.i64;
         } else {
             vm->ip++;
         }
     } break;
 
     case LOPSIN_INST_RJMP: {
-        vm->ip += inst.operand;
+        if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        vm->ip += inst.operand.as.i64;
     } break;
 
     case LOPSIN_INST_CRJMP: {
+        if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_OPERAND;
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
-        if (vm->dstack[--vm->dsp]) {
-            vm->ip += inst.operand;
+        LopsinValue a = vm->dstack[--vm->dsp];
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        if (a.as.i64) {
+            vm->ip += inst.operand.as.i64;
         } else {
             vm->ip++;
         }
     } break;
 
     case LOPSIN_INST_CALL: {
+        if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_OPERAND;
         if (vm->rsp >= vm->rstack_cap) return ERR_RSTACK_OVERFLOW;
 
         vm->rstack[vm->rsp++] = vm->ip + 1;
-        vm->ip = inst.operand;
+        vm->ip = inst.operand.as.i64;
     } break;
 
     case LOPSIN_INST_RET: {
@@ -487,7 +676,13 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
-        printf("%"PRId64"\n", vm->dstack[--vm->dsp]);
+        LopsinValue a = vm->dstack[--vm->dsp];
+
+        switch (a.type) {
+        case LOPSIN_TYPE_I64: printf("%"PRId64"\n", a.as.i64); break;
+
+        default: return ERR_INVALID_TYPE;
+        }
         vm->ip++;
     } break;
 
@@ -495,7 +690,9 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
-        printf("%c", (char) vm->dstack[--vm->dsp]);
+        LopsinValue a = vm->dstack[--vm->dsp];
+        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        printf("%c", (char) a.as.i64);
         vm->ip++;
     } break;
 
@@ -505,6 +702,18 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     }
     
     return ERR_OK;
+}
+
+void lopsinvalue_print(FILE *stream, LopsinValue value)
+{
+    static_assert(COUNT_LOPSIN_TYPES == 1, "Exhaustive handling of LopsinType's in lopsinvalue_print");
+    switch (value.type) {
+    case LOPSIN_TYPE_I64: fprintf(stream, "%"PRId64, value.as.i64); break;
+
+    default: {
+        CRASH("unreachable");
+    }
+    }
 }
 
 LopsinErr lopsinvm_start(LopsinVM *vm)

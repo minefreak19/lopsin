@@ -162,9 +162,10 @@ int main(int argc, const char **argv)
 
             if (success) {
                 if (args.debug_mode) {
-                    printf("Spit instruction: %s\t%u\n",
-                           LOPSIN_INST_TYPE_NAMES[inst.type],
-                           (unsigned) inst.operand);
+                    printf("Spit instruction: %s\t",
+                           LOPSIN_INST_TYPE_NAMES[inst.type]);
+                    lopsinvalue_print(stdout, inst.operand);
+                    printf("\n");
                 }
 
                 buffer_append_bytes(output_buf, &inst, sizeof(LopsinInst));
