@@ -81,6 +81,12 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_DIV_BY_ZERO]       = "Division by zero",
 };
 
+static_assert(COUNT_LOPSIN_TYPES == 2, "Exhaustive definition of LOPSIN_TYPE_NAMES[] with respect to LopsinType's");
+const char * const LOPSIN_TYPE_NAMES[COUNT_LOPSIN_TYPES] = {
+    [LOPSIN_TYPE_I64]       = "i64",
+    [LOPSIN_TYPE_BOOL]      = "bool",
+};
+
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 {
     fprintf(stream, 
