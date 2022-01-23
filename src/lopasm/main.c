@@ -164,7 +164,11 @@ int main(int argc, const char **argv)
                 if (args.debug_mode) {
                     printf("Spit instruction: %s\t",
                            LOPSIN_INST_TYPE_NAMES[inst.type]);
-                    lopsinvalue_print(stdout, inst.operand);
+
+                    if (requires_operand(inst.type)) {
+                        lopsinvalue_print(stdout, inst.operand);
+                    }
+
                     printf("\n");
                 }
 

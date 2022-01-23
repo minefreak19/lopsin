@@ -765,7 +765,7 @@ void lopsinvalue_print(FILE *stream, LopsinValue value)
     case LOPSIN_TYPE_BOOL: fprintf(stream, "%s", value.as.boolean ? "true" : "false"); break;
 
     default: {
-        CRASH("unreachable");
+        return;
     }
     }
 }
