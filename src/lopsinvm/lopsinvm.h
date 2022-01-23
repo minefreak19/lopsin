@@ -18,7 +18,7 @@ extern "C"
 #define LOPSINVM_BYTECODE_MAGIC "\105\114\117\120\122\151\102\141"
 
 typedef enum {
-    // LOPSIN_TYPE_ANY = 0,
+    LOPSIN_TYPE_VOID = 0,
     LOPSIN_TYPE_I64,
     LOPSIN_TYPE_BOOL,
 

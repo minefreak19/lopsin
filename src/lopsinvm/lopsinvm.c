@@ -81,8 +81,9 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_DIV_BY_ZERO]       = "Division by zero",
 };
 
-static_assert(COUNT_LOPSIN_TYPES == 2, "Exhaustive definition of LOPSIN_TYPE_NAMES[] with respect to LopsinType's");
+static_assert(COUNT_LOPSIN_TYPES == 3, "Exhaustive definition of LOPSIN_TYPE_NAMES[] with respect to LopsinType's");
 const char * const LOPSIN_TYPE_NAMES[COUNT_LOPSIN_TYPES] = {
+    [LOPSIN_TYPE_VOID]      = "void",
     [LOPSIN_TYPE_I64]       = "i64",
     [LOPSIN_TYPE_BOOL]      = "bool",
 };
@@ -759,9 +760,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
 void lopsinvalue_print(FILE *stream, LopsinValue value)
 {
-    static_assert(COUNT_LOPSIN_TYPES == 2, "Exhaustive handling of LopsinType's in lopsinvalue_print");
+    static_assert(COUNT_LOPSIN_TYPES == 3, "Exhaustive handling of LopsinType's in lopsinvalue_print");
     switch (value.type) {
-    case LOPSIN_TYPE_I64: fprintf(stream, "%"PRId64, value.as.i64); break;
+    case LOPSIN_TYPE_VOID: fprintf(stream, "%s", "(void)"); break;
+    case LOPSIN_TYPE_I64 : fprintf(stream, "%"PRId64, value.as.i64); break;
     case LOPSIN_TYPE_BOOL: fprintf(stream, "%s", value.as.boolean ? "true" : "false"); break;
 
     default: {
