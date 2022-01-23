@@ -21,12 +21,14 @@ extern "C"
 typedef enum {
     // LOPSIN_TYPE_ANY = 0,
     LOPSIN_TYPE_I64,
+    LOPSIN_TYPE_BOOL,
 
     COUNT_LOPSIN_TYPES
 } LopsinType;
 
 typedef union {
     int64_t i64;
+    bool boolean;
 } LopsinValueAs;
 
 typedef struct {

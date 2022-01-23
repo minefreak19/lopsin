@@ -467,7 +467,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         vm->dstack[vm->dsp++] = (LopsinValue) {
             .type = a.type,
             .as = {
-                .i64 = b.as.i64 || a.as.i64,
+                .boolean = b.as.boolean || a.as.boolean,
             },
         };
 
@@ -481,12 +481,12 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         LopsinValue b = vm->dstack[--vm->dsp];
 
         if (a.type != b.type) return ERR_INVALID_TYPE;
-        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_BOOL) return ERR_INVALID_TYPE;
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
             .type = a.type,
             .as = {
-                .i64 = b.as.i64 && a.as.i64,
+                .boolean = b.as.boolean && a.as.boolean,
             },
         };
 
@@ -498,11 +498,11 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
         LopsinValue a = vm->dstack[--vm->dsp];
 
-        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        if (a.type != LOPSIN_TYPE_BOOL) return ERR_INVALID_TYPE;
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
             .type = a.type,
-            .as.i64 = !a.as.i64,
+            .as.boolean = !a.as.boolean,
         };
     } break;
 
@@ -516,9 +516,9 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
-            .type = a.type,
+            .type = LOPSIN_TYPE_BOOL,
             .as = {
-                .i64 = b.as.i64 > a.as.i64,
+                .boolean = b.as.i64 > a.as.i64,
             },
         };
 
@@ -535,9 +535,9 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
-            .type = a.type,
+            .type = LOPSIN_TYPE_BOOL,
             .as = {
-                .i64 = b.as.i64 < a.as.i64,
+                .boolean = b.as.i64 < a.as.i64,
             },
         };
 
@@ -554,9 +554,9 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
-            .type = a.type,
+            .type = LOPSIN_TYPE_BOOL,
             .as = {
-                .i64 = b.as.i64 >= a.as.i64,
+                .boolean = b.as.i64 >= a.as.i64,
             },
         };
 
@@ -573,9 +573,9 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
-            .type = a.type,
+            .type = LOPSIN_TYPE_BOOL,
             .as = {
-                .i64 = b.as.i64 <= a.as.i64,
+                .boolean = b.as.i64 <= a.as.i64,
             },
         };
 
@@ -587,14 +587,26 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
+        
+        bool result;
 
-        if (a.type != b.type) return ERR_INVALID_TYPE;
-        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        if (a.type != b.type) {
+            result = false;
+        } else {
+            switch (a.type) {
+                case LOPSIN_TYPE_BOOL: result = a.as.boolean == b.as.boolean; break;
+                case LOPSIN_TYPE_I64:  result = a.as.i64 == b.as.i64; break;
+
+                default: {
+                    CRASH("unreachable");
+                }
+            }
+        }
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
-            .type = a.type,
+            .type = LOPSIN_TYPE_BOOL,
             .as = {
-                .i64 = b.as.i64 == a.as.i64,
+                .boolean = result,
             },
         };
 
@@ -607,13 +619,25 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         LopsinValue a = vm->dstack[--vm->dsp];
         LopsinValue b = vm->dstack[--vm->dsp];
 
-        if (a.type != b.type) return ERR_INVALID_TYPE;
-        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+        bool result;
+
+        if (a.type != b.type) {
+            result = true;
+        } else {
+            switch (a.type) {
+                case LOPSIN_TYPE_BOOL: result = a.as.boolean != b.as.boolean; break;
+                case LOPSIN_TYPE_I64:  result = a.as.i64 != b.as.i64; break;
+
+                default: {
+                    CRASH("unreachable");
+                }
+            }
+        }
 
         vm->dstack[vm->dsp++] = (LopsinValue) {
-            .type = a.type,
+            .type = LOPSIN_TYPE_BOOL,
             .as = {
-                .i64 = b.as.i64 != a.as.i64,
+                .boolean = result,
             },
         };
 
@@ -627,12 +651,16 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
     case LOPSIN_INST_CJMP: {
         if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
+
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
+
         LopsinValue a = vm->dstack[--vm->dsp];
-        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
-        if (a.as.i64) {
+
+        if (a.type != LOPSIN_TYPE_BOOL) return ERR_INVALID_TYPE;
+
+        if (a.as.boolean) {
             vm->ip = inst.operand.as.i64;
         } else {
             vm->ip++;
@@ -646,12 +674,16 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
     case LOPSIN_INST_CRJMP: {
         if (inst.operand.type != LOPSIN_TYPE_I64) return ERR_INVALID_OPERAND;
+
         if (vm->dsp <= 0) {
             return ERR_DSTACK_UNDERFLOW;
         }
+
         LopsinValue a = vm->dstack[--vm->dsp];
-        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
-        if (a.as.i64) {
+
+        if (a.type != LOPSIN_TYPE_BOOL) return ERR_INVALID_TYPE;
+
+        if (a.as.boolean) {
             vm->ip += inst.operand.as.i64;
         } else {
             vm->ip++;
@@ -706,9 +738,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
 void lopsinvalue_print(FILE *stream, LopsinValue value)
 {
-    static_assert(COUNT_LOPSIN_TYPES == 1, "Exhaustive handling of LopsinType's in lopsinvalue_print");
+    static_assert(COUNT_LOPSIN_TYPES == 2, "Exhaustive handling of LopsinType's in lopsinvalue_print");
     switch (value.type) {
     case LOPSIN_TYPE_I64: fprintf(stream, "%"PRId64, value.as.i64); break;
+    case LOPSIN_TYPE_BOOL: fprintf(stream, "%s", value.as.boolean ? "true" : "false"); break;
 
     default: {
         CRASH("unreachable");
