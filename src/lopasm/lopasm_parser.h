@@ -1,3 +1,15 @@
+/*
+Created 23 January 2022
+ */
+
+#ifndef LOPASM_PARSER_H_
+#define LOPASM_PARSER_H_
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 #include <stdbool.h>
 
 #include "./lopasm_lexer.h"
@@ -37,3 +49,9 @@ LopAsm_Parser *new_parser(void);
 bool lopasm_parser_spit_inst(LopAsm_Parser *parser, LopsinInst *out);
 bool lopasm_parser_accept_token(LopAsm_Parser *parser, LopAsm_Token token);
 void lopasm_parser_free(LopAsm_Parser *parser);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* LOPASM_PARSER_H_ */
