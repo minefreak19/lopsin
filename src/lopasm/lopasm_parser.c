@@ -183,8 +183,6 @@ void lopasm_parser_free(LopAsm_Parser *parser)
 
 static void populate_hardcoded_labels(Parser *parser)
 {
-    static_assert(COUNT_LOPSIN_TYPES == 2, "exhaustive handling of LopsinType's in definition of populate_hardcoded_labels()");
-
     for (LopsinType i = 0; i < COUNT_LOPSIN_TYPES; i++) {
         parser->labels[parser->labels_sz++] = (Label) {
             .loc = i,
