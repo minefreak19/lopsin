@@ -181,6 +181,18 @@ void lopasm_parser_free(LopAsm_Parser *parser)
     free(parser);
 }
 
+static void populate_hardcoded_labels(Parser *parser)
+{
+    static_assert(COUNT_LOPSIN_TYPES == 2, "exhaustive handling of LopsinType's in definition of populate_hardcoded_labels()");
+
+    for (LopsinType i = 0; i < COUNT_LOPSIN_TYPES; i++) {
+        parser->labels[parser->labels_sz++] = (Label) {
+            .loc = i,
+            .name = sv_from_cstr(LOPSIN_TYPE_NAMES[i]),
+        };
+    }
+}
+
 #define LOPASM_PARSER_INITIAL_TOKENS_CAP 1024
 LopAsm_Parser *new_parser(void)
 {
@@ -194,6 +206,8 @@ LopAsm_Parser *new_parser(void)
         .tokens_sz = 0,
         .phase = LOPASM_PARSER_PHASE_ONE,
     };
+
+    populate_hardcoded_labels(parser);
 
     return parser;
 }
