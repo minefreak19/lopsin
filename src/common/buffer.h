@@ -112,7 +112,7 @@ BUFFERDEF void buffer_append_bytes(Buffer *buf, const void *ptr, size_t bytes)
 
     if (bytes == 0) return;
 
-    buffer_ensure(buf, buf->size + 1);
+    buffer_ensure(buf, buf->size + bytes);
 
     memcpy(&buf->data[buf->size], ptr, bytes);
     buf->size += bytes;
