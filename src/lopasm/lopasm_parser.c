@@ -199,7 +199,7 @@ LopAsm_Parser *new_parser(void)
         .ip = 0,
         .labels = {0},
         .labels_sz = 0,
-        .tokens = NOTNULL(calloc(sizeof(Token), LOPASM_PARSER_INITIAL_TOKENS_CAP)),
+        .tokens = NOTNULL(calloc(LOPASM_PARSER_INITIAL_TOKENS_CAP, sizeof(Token))),
         .tokens_cap = LOPASM_PARSER_INITIAL_TOKENS_CAP,
         .tokens_sz = 0,
         .phase = LOPASM_PARSER_PHASE_ONE,
