@@ -98,6 +98,7 @@ typedef enum {
 
     LOPSIN_INST_DUMP,
     LOPSIN_INST_PUTC,
+    LOPSIN_INST_READ,
 
     COUNT_LOPSIN_INST_TYPES
 } LopsinInstType;
