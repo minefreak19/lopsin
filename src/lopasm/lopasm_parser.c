@@ -184,6 +184,7 @@ void lopasm_parser_free(LopAsm_Parser *parser)
 static void populate_hardcoded_labels(Parser *parser)
 {
     for (LopsinType i = 0; i < COUNT_LOPSIN_TYPES; i++) {
+        assert(parser->labels_sz < LOPASM_LABELS_CAP);
         parser->labels[parser->labels_sz++] = (Label) {
             .loc = i,
             .name = sv_from_cstr(LOPSIN_TYPE_NAMES[i]),
@@ -191,6 +192,7 @@ static void populate_hardcoded_labels(Parser *parser)
     }
 
     for (LopsinNativeType i = 0; i < COUNT_LOPSIN_NATIVES; i++) {
+        assert(parser->labels_sz < LOPASM_LABELS_CAP);
         parser->labels[parser->labels_sz++] = (Label) {
             .loc = i,
             .name = sv_from_cstr(LOPSIN_NATIVES[i].name),
