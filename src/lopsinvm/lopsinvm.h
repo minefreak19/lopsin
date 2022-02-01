@@ -93,6 +93,7 @@ typedef enum {
     LOPSIN_INST_CRJMP,
     LOPSIN_INST_CALL,
     LOPSIN_INST_RET,
+    LOPSIN_INST_NCALL,
 
     LOPSIN_INST_CAST,
 
@@ -102,6 +103,11 @@ typedef enum {
 
     COUNT_LOPSIN_INST_TYPES
 } LopsinInstType;
+
+typedef enum {
+    LOPSIN_NATIVE_HELLO = 0, 
+    COUNT_LOPSIN_NATIVES
+} LopsinNativeType;
 
 typedef struct {
     LopsinInstType type;
@@ -140,6 +146,12 @@ typedef struct {
     bool running;
 } LopsinVM;
 
+typedef LopsinErr (*LopsinNativeProc)(LopsinVM *);
+typedef struct {
+    LopsinNativeProc proc;
+    const char * const name;
+} LopsinNative;
+
 #define ERR_AS_CSTR(err) (LOPSIN_ERR_NAMES[err])
 
 #define MAKE_INST(insttype, value) { .type = LOPSIN_INST_##insttype, .operand = value }
@@ -147,6 +159,7 @@ typedef struct {
 extern const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES];
 extern const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS];
 extern const char * const LOPSIN_TYPE_NAMES[COUNT_LOPSIN_TYPES];
+extern const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES];
 
 bool requires_operand(LopsinInstType insttype);
 void lopsinvalue_print(FILE *stream, LopsinValue);

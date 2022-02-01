@@ -17,7 +17,10 @@
 
 #include "util.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 36, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+#define NATIVES_IMPLEMENTATION
+#include "./natives.h"
+
+static_assert(COUNT_LOPSIN_INST_TYPES == 37, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -56,6 +59,7 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_CRJMP]         = "crjmp",
     [LOPSIN_INST_CALL]          = "call",
     [LOPSIN_INST_RET]           = "ret",
+    [LOPSIN_INST_NCALL]         = "ncall",
 
     [LOPSIN_INST_CAST]          = "cast",
 
@@ -89,6 +93,12 @@ const char * const LOPSIN_TYPE_NAMES[COUNT_LOPSIN_TYPES] = {
     [LOPSIN_TYPE_BOOL]      = "bool",
 };
 
+
+static_assert(COUNT_LOPSIN_NATIVES == 1, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
+const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
+    [LOPSIN_NATIVE_HELLO] = { .name = "hello", .proc = &lopsin_native_hello },
+};
+
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 {
     fprintf(stream, 
@@ -110,7 +120,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 36, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 37, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -150,6 +160,7 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_RJMP:
     case LOPSIN_INST_CRJMP:
     case LOPSIN_INST_CALL:
+    case LOPSIN_INST_NCALL:
     case LOPSIN_INST_CAST:
         return true;
 
@@ -161,7 +172,7 @@ bool requires_operand(LopsinInstType insttype)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 36, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 37, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     
     if (!vm->running) {
         return ERR_HALTED;
@@ -714,6 +725,18 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (vm->rsp <= 0) return ERR_RSTACK_UNDERFLOW;
 
         vm->ip = vm->rstack[--vm->rsp];
+    } break;
+
+    case LOPSIN_INST_NCALL: {
+        LopsinNativeType idx = inst.operand.as.i64;
+        if (idx < 0 || idx > COUNT_LOPSIN_NATIVES) return ERR_INVALID_OPERAND;
+
+        LopsinNative native = LOPSIN_NATIVES[idx];
+        LopsinErr errlvl = (*native.proc)(vm);
+        if (errlvl != ERR_OK) return errlvl;
+        
+        vm->ip++; 
+        // if the natives want to keep the ip they can just ip-- it.
     } break;
 
     case LOPSIN_INST_CAST: {
