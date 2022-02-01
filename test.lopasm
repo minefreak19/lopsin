@@ -1,5 +1,5 @@
 call main hlt
 
 main:
-	ncall 0
+	ncall hello
 	ret

@@ -189,6 +189,13 @@ static void populate_hardcoded_labels(Parser *parser)
             .name = sv_from_cstr(LOPSIN_TYPE_NAMES[i]),
         };
     }
+
+    for (LopsinNativeType i = 0; i < COUNT_LOPSIN_NATIVES; i++) {
+        parser->labels[parser->labels_sz++] = (Label) {
+            .loc = i,
+            .name = sv_from_cstr(LOPSIN_NATIVES[i].name),
+        };
+    }
 }
 
 #define LOPASM_PARSER_INITIAL_TOKENS_CAP 1024
