@@ -142,7 +142,7 @@ BUFFERDEF void buffer_append_fmt(Buffer *buf, const char *format, ...)
 
     va_end(vargs);
 
-    char *str = NOTNULL(malloc(len * sizeof(char)));
+    char *str = NOTNULL(malloc((len + 1) * sizeof(char)));
 
     va_start(vargs, format);
     // actually do the thing
