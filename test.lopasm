@@ -7,5 +7,8 @@ main:
  	push 127
  	swap 1
  	memwr
- 	memrd ncall dump
+	
+ 	push 32 sum
+	// push 33 sum ; leads to an error
+	memrd ncall dump
  	ret

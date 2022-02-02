@@ -58,6 +58,9 @@ LopsinErr lopsin_native_malloc(LopsinVM *vm)
 {
     if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
     size_t bytes = vm->dstack[--vm->dsp].as_i64;
+
+    assert(vm->alloced_count < LOPSINVM_ALLOCED_CHUNKS_CAP);
+
     void *ptr = malloc(bytes);
     if (ptr == NULL) return ERR_OUT_OF_MEMORY;
 
@@ -65,6 +68,9 @@ LopsinErr lopsin_native_malloc(LopsinVM *vm)
         free(ptr);
         return ERR_DSTACK_OVERFLOW;
     }
+
+    vm->alloced[vm->alloced_count++] = (Mem_Chunk) { .ptr = ptr, .bytes = bytes, };
+
     vm->dstack[vm->dsp++].as_ptr = ptr;
     return ERR_OK;
 }
@@ -74,6 +80,22 @@ LopsinErr lopsin_native_free(LopsinVM *vm)
     if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
 
     void *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+    assert(vm->alloced_count > 0);
+    bool found = false;
+    for (size_t i = 0; i < vm->alloced_count; i++) {
+        if (found) {
+            vm->alloced[i - 1] = vm->alloced[i];
+        }
+        if (vm->alloced[i].ptr == ptr) {
+            found = true;
+            // this will get overwritten on the next iteration
+        }
+    }
+
+    if (!found) return ERR_BAD_MEM_PTR;
+
+    vm->alloced_count--;
     free(ptr);
     return ERR_OK;
 }

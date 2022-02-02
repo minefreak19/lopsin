@@ -34,6 +34,7 @@ typedef enum {
     
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
+    // TODO: more specialised memory errors
     ERR_BAD_MEM_PTR,
     ERR_OUT_OF_MEMORY,
     ERR_HALTED,
@@ -108,12 +109,18 @@ typedef struct {
 #define LOPSINVM_DEFAULT_PROGRAM_COUNT 1024
 #define LOPSINVM_DEFAULT_DSTACK_CAP 1024
 #define LOPSINVM_DEFAULT_RSTACK_CAP 1024
+#define LOPSINVM_ALLOCED_CHUNKS_CAP 1024
 
 typedef struct {
     LopsinInst *insts;
     size_t count;
     size_t cap;
 } LopsinVMProgram;
+
+typedef struct {
+    void *ptr;
+    size_t bytes;
+} Mem_Chunk;
 
 typedef struct {
     /// Data stack.
@@ -131,6 +138,10 @@ typedef struct {
 
     /// Instruction pointer.
     size_t ip;
+
+    /// Allocated memory chunks
+    Mem_Chunk alloced[LOPSINVM_ALLOCED_CHUNKS_CAP];
+    size_t alloced_count;
 
     /// flags
     bool debug_mode;

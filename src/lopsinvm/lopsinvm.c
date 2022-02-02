@@ -176,6 +176,19 @@ bool requires_operand(LopsinInstType insttype)
         (vm)->ip++; \
     } while (0)
 
+static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out) 
+{
+    uintptr_t ptr = (uintptr_t) memptr;
+    for (size_t i = 0; i < vm->alloced_count; i++) {
+        Mem_Chunk chunk = vm->alloced[i];
+        if ((uintptr_t)chunk.ptr <= ptr && ptr <= (uintptr_t)chunk.ptr + chunk.bytes) {
+            if (out) *out = chunk;
+            return true;
+        }
+    }
+    return false;
+}
+
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
     static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
@@ -429,7 +442,8 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
         uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
 
-        // TODO: keep track of what VM allocates
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
         if (ptr == NULL) return ERR_BAD_MEM_PTR;
 
         vm->dstack[vm->dsp++].as_i64 = *ptr;
@@ -441,8 +455,8 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
         uint8_t val = (uint8_t) vm->dstack[--vm->dsp].as_i64;
 
-        if (ptr == NULL) return ERR_BAD_MEM_PTR;
-
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+        
         *ptr = val;
 
         vm->ip++;
@@ -499,12 +513,19 @@ LopsinVM lopsinvm_new(void)
         .rsp = 0,
         .rstack = NOTNULL(calloc(LOPSINVM_DEFAULT_RSTACK_CAP, sizeof(size_t))),
         .rstack_cap = LOPSINVM_DEFAULT_RSTACK_CAP,
+
+        .alloced = {0},
+        .alloced_count = 0,
     };
 }
 
 void lopsinvm_free(LopsinVM *vm)
 {
     assert(!vm->running);
+
+    for (size_t i = 0; i < vm->alloced_count; i++) {
+        free(vm->alloced[i].ptr);
+    }
 
     free(vm->dstack);
     free(vm->rstack);
