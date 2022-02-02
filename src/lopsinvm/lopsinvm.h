@@ -20,6 +20,7 @@ extern "C"
 typedef enum {
     LOPSIN_TYPE_VOID = 0,
     LOPSIN_TYPE_I64,
+    LOPSIN_TYPE_PTR,
     LOPSIN_TYPE_BOOL,
 
     COUNT_LOPSIN_TYPES
@@ -28,6 +29,7 @@ typedef enum {
 typedef union {
     int64_t i64;
     bool boolean;
+    void *ptr;
 } LopsinValueAs;
 
 typedef struct {
