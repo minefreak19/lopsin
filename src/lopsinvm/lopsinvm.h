@@ -17,24 +17,10 @@ extern "C"
 
 #define LOPSINVM_BYTECODE_MAGIC "\105\114\117\120\122\151\102\141"
 
-typedef enum {
-    LOPSIN_TYPE_VOID = 0,
-    LOPSIN_TYPE_I64,
-    LOPSIN_TYPE_PTR,
-    LOPSIN_TYPE_BOOL,
-
-    COUNT_LOPSIN_TYPES
-} LopsinType;
-
 typedef union {
-    int64_t i64;
-    bool boolean;
-    void *ptr;
-} LopsinValueAs;
-
-typedef struct {
-    LopsinType type;
-    LopsinValueAs as;
+    int64_t as_i64;
+    bool as_boolean;
+    void *as_ptr;
 } LopsinValue;
 
 typedef enum {
@@ -158,7 +144,6 @@ typedef struct {
 
 extern const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES];
 extern const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS];
-extern const char * const LOPSIN_TYPE_NAMES[COUNT_LOPSIN_TYPES];
 extern const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES];
 
 bool requires_operand(LopsinInstType insttype);

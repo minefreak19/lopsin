@@ -3,7 +3,10 @@ call main hlt
 putcstr:
 	ncall putc
 	dup 1
-	cast bool
+	
+	// effectively cast(bool), though unnecessary
+	lnot lnot 
+	
 	cjmp putcstr
 	drop 1
 	ret

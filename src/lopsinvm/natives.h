@@ -39,7 +39,7 @@ LopsinErr lopsin_native_dump(LopsinVM *vm)
 LopsinErr lopsin_native_putc(LopsinVM *vm)
 {
     if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
-    putc(vm->dstack[--vm->dsp].as.i64, stdout);
+    putc(vm->dstack[--vm->dsp].as_i64, stdout);
     return ERR_OK;
 }
 
@@ -48,7 +48,7 @@ LopsinErr lopsin_native_read(LopsinVM *vm)
     if (vm->dsp >= vm->dstack_cap) return ERR_DSTACK_OVERFLOW;
     int64_t x;
     scanf("%"PRId64, &x);
-    vm->dstack[vm->dsp++] = (LopsinValue) { .type = LOPSIN_TYPE_I64, .as.i64 = x };
+    vm->dstack[vm->dsp++] = (LopsinValue) { .as_i64 = x };
     return ERR_OK;
 }
 
