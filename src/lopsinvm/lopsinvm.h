@@ -97,15 +97,13 @@ typedef enum {
 
     LOPSIN_INST_CAST,
 
-    LOPSIN_INST_DUMP,
-    LOPSIN_INST_PUTC,
-    LOPSIN_INST_READ,
-
     COUNT_LOPSIN_INST_TYPES
 } LopsinInstType;
 
 typedef enum {
-    LOPSIN_NATIVE_HELLO = 0, 
+    LOPSIN_NATIVE_DUMP = 0,
+    LOPSIN_NATIVE_PUTC,
+    LOPSIN_NATIVE_READ,
     COUNT_LOPSIN_NATIVES
 } LopsinNativeType;
 

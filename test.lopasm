@@ -1,5 +1,9 @@
 call main hlt
 
 main:
-	ncall hello
+	push 97 ncall putc
+	push '\n' ncall putc
+
+	ncall read
+	ncall dump
 	ret

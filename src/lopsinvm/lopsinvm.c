@@ -20,7 +20,7 @@
 #define NATIVES_IMPLEMENTATION
 #include "./natives.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 37, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -62,10 +62,6 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NCALL]         = "ncall",
 
     [LOPSIN_INST_CAST]          = "cast",
-
-    [LOPSIN_INST_DUMP]          = "dump",
-    [LOPSIN_INST_PUTC]          = "putc",
-    [LOPSIN_INST_READ]          = "read",
 };
 
 static_assert(COUNT_LOPSIN_ERRS == 11, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
@@ -94,9 +90,11 @@ const char * const LOPSIN_TYPE_NAMES[COUNT_LOPSIN_TYPES] = {
 };
 
 
-static_assert(COUNT_LOPSIN_NATIVES == 1, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
+static_assert(COUNT_LOPSIN_NATIVES == 3, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
 const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
-    [LOPSIN_NATIVE_HELLO] = { .name = "hello", .proc = &lopsin_native_hello },
+    [LOPSIN_NATIVE_DUMP] = { .name = "dump", .proc = &lopsin_native_dump },
+    [LOPSIN_NATIVE_PUTC] = { .name = "putc", .proc = &lopsin_native_putc },
+    [LOPSIN_NATIVE_READ] = { .name = "read", .proc = &lopsin_native_read },
 };
 
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
@@ -120,7 +118,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 37, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -145,10 +143,7 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_LTE:
     case LOPSIN_INST_EQ:
     case LOPSIN_INST_NEQ:
-    case LOPSIN_INST_DUMP:
-    case LOPSIN_INST_PUTC:
     case LOPSIN_INST_RET:
-    case LOPSIN_INST_READ:
         return false;
 
     case LOPSIN_INST_PUSH:
@@ -172,7 +167,7 @@ bool requires_operand(LopsinInstType insttype)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 37, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     
     if (!vm->running) {
         return ERR_HALTED;
@@ -747,44 +742,6 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
             return ERR_INVALID_OPERAND;
 
         vm->dstack[vm->dsp - 1].type = inst.operand.as.i64;
-
-        vm->ip++;
-    } break;
-
-    case LOPSIN_INST_DUMP: {
-        if (vm->dsp <= 0) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
-        LopsinValue a = vm->dstack[--vm->dsp];
-
-        switch (a.type) {
-        case LOPSIN_TYPE_I64: printf("%"PRId64"\n", a.as.i64); break;
-
-        default: return ERR_INVALID_TYPE;
-        }
-        vm->ip++;
-    } break;
-
-    case LOPSIN_INST_PUTC: {
-        if (vm->dsp <= 0) {
-            return ERR_DSTACK_UNDERFLOW;
-        }
-        LopsinValue a = vm->dstack[--vm->dsp];
-        if (a.type != LOPSIN_TYPE_I64) return ERR_INVALID_TYPE;
-        printf("%c", (char) a.as.i64);
-        vm->ip++;
-    } break;
-
-    case LOPSIN_INST_READ: {
-        if (vm->dsp >= vm->dstack_cap) return ERR_DSTACK_OVERFLOW;
-
-        int64_t x;
-        scanf("%"PRId64, &x);
-
-        vm->dstack[vm->dsp++] = (LopsinValue) {
-            .type = LOPSIN_TYPE_I64,
-            .as.i64 = x,
-        };
 
         vm->ip++;
     } break;
