@@ -65,7 +65,7 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_MEMWR]         = "memwr",
 };
 
-static_assert(COUNT_LOPSIN_ERRS == 12, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
+static_assert(COUNT_LOPSIN_ERRS == 13, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
 const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_OK]                = "OK",
 
@@ -76,7 +76,8 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
 
     [ERR_ILLEGAL_INST]      = "Illegal instruction",
     [ERR_BAD_INST_PTR]      = "Bad instruction pointer",
-    [ERR_BAD_MEM_PTR]      = "Bad memory pointer",
+    [ERR_BAD_MEM_PTR]       = "Bad memory pointer",
+    [ERR_OUT_OF_MEMORY]     = "Out of memory",
     [ERR_HALTED]            = "Already halted",
     [ERR_INVALID_OPERAND]   = "Invalid operand for operation",
     [ERR_INVALID_TYPE]      = "Invalid type for operation",
@@ -84,11 +85,13 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_DIV_BY_ZERO]       = "Division by zero",
 };
 
-static_assert(COUNT_LOPSIN_NATIVES == 3, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
+static_assert(COUNT_LOPSIN_NATIVES == 5, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
 const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
-    [LOPSIN_NATIVE_DUMP] = { .name = "dump", .proc = &lopsin_native_dump },
-    [LOPSIN_NATIVE_PUTC] = { .name = "putc", .proc = &lopsin_native_putc },
-    [LOPSIN_NATIVE_READ] = { .name = "read", .proc = &lopsin_native_read },
+    [LOPSIN_NATIVE_DUMP]   = { .name = "dump", .proc = &lopsin_native_dump },
+    [LOPSIN_NATIVE_PUTC]   = { .name = "putc", .proc = &lopsin_native_putc },
+    [LOPSIN_NATIVE_READ]   = { .name = "read", .proc = &lopsin_native_read },
+    [LOPSIN_NATIVE_MALLOC] = { .name = "malloc", .proc = &lopsin_native_malloc },
+    [LOPSIN_NATIVE_FREE]   = { .name = "free", .proc = &lopsin_native_free },
 };
 
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)

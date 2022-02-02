@@ -12,10 +12,12 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-static_assert(COUNT_LOPSIN_NATIVES == 3, "Exhaustive definition of native functions");
-LopsinErr lopsin_native_dump (LopsinVM *vm);
-LopsinErr lopsin_native_putc (LopsinVM *vm);
-LopsinErr lopsin_native_read (LopsinVM *vm);
+static_assert(COUNT_LOPSIN_NATIVES == 5, "Exhaustive definition of native functions");
+LopsinErr lopsin_native_dump   (LopsinVM *vm);
+LopsinErr lopsin_native_putc   (LopsinVM *vm);
+LopsinErr lopsin_native_read   (LopsinVM *vm);
+LopsinErr lopsin_native_malloc (LopsinVM *vm);
+LopsinErr lopsin_native_free   (LopsinVM *vm);
 
 #ifdef __cplusplus
 }
@@ -49,6 +51,30 @@ LopsinErr lopsin_native_read(LopsinVM *vm)
     int64_t x;
     scanf("%"PRId64, &x);
     vm->dstack[vm->dsp++] = (LopsinValue) { .as_i64 = x };
+    return ERR_OK;
+}
+
+LopsinErr lopsin_native_malloc(LopsinVM *vm)
+{
+    if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+    size_t bytes = vm->dstack[--vm->dsp].as_i64;
+    void *ptr = malloc(bytes);
+    if (ptr == NULL) return ERR_OUT_OF_MEMORY;
+
+    if (vm->dsp >= vm->dstack_cap) {
+        free(ptr);
+        return ERR_DSTACK_OVERFLOW;
+    }
+    vm->dstack[vm->dsp++].as_ptr = ptr;
+    return ERR_OK;
+}
+
+LopsinErr lopsin_native_free(LopsinVM *vm)
+{
+    if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+
+    void *ptr = vm->dstack[--vm->dsp].as_ptr;
+    free(ptr);
     return ERR_OK;
 }
 

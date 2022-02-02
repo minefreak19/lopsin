@@ -1,9 +1,11 @@
 call main hlt
 
 main:
-	push 97 ncall putc
-	push '\n' ncall putc
-
-	ncall read
-	ncall dump
-	ret
+	push 32
+ 	ncall malloc
+ 	dup  1
+ 	push 127
+ 	swap 1
+ 	memwr
+ 	memrd ncall dump
+ 	ret
