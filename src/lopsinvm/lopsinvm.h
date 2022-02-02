@@ -34,6 +34,7 @@ typedef enum {
     
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
+    ERR_BAD_MEM_PTR,
     ERR_HALTED,
     ERR_INVALID_OPERAND,
     ERR_INVALID_TYPE,
@@ -82,6 +83,9 @@ typedef enum {
     LOPSIN_INST_CALL,
     LOPSIN_INST_RET,
     LOPSIN_INST_NCALL,
+
+    LOPSIN_INST_MEMRD,
+    LOPSIN_INST_MEMWR,
 
     COUNT_LOPSIN_INST_TYPES
 } LopsinInstType;

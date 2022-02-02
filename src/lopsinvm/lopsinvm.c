@@ -20,7 +20,7 @@
 #define NATIVES_IMPLEMENTATION
 #include "./natives.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 33, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -60,9 +60,12 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_CALL]          = "call",
     [LOPSIN_INST_RET]           = "ret",
     [LOPSIN_INST_NCALL]         = "ncall",
+
+    [LOPSIN_INST_MEMRD]         = "memrd",
+    [LOPSIN_INST_MEMWR]         = "memwr",
 };
 
-static_assert(COUNT_LOPSIN_ERRS == 11, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
+static_assert(COUNT_LOPSIN_ERRS == 12, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
 const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_OK]                = "OK",
 
@@ -73,6 +76,7 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
 
     [ERR_ILLEGAL_INST]      = "Illegal instruction",
     [ERR_BAD_INST_PTR]      = "Bad instruction pointer",
+    [ERR_BAD_MEM_PTR]      = "Bad memory pointer",
     [ERR_HALTED]            = "Already halted",
     [ERR_INVALID_OPERAND]   = "Invalid operand for operation",
     [ERR_INVALID_TYPE]      = "Invalid type for operation",
@@ -108,7 +112,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 33, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -134,6 +138,8 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_EQ:
     case LOPSIN_INST_NEQ:
     case LOPSIN_INST_RET:
+    case LOPSIN_INST_MEMRD:
+    case LOPSIN_INST_MEMWR:
         return false;
 
     case LOPSIN_INST_PUSH:
@@ -169,7 +175,7 @@ bool requires_operand(LopsinInstType insttype)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 33, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     
     if (!vm->running) {
         return ERR_HALTED;
@@ -413,6 +419,29 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         
         vm->ip++; 
         // if the natives want to keep the ip they can just ip-- it.
+    } break;
+
+    case LOPSIN_INST_MEMRD: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        // TODO: keep track of what VM allocates
+        if (ptr == NULL) return ERR_BAD_MEM_PTR;
+
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_MEMWR: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint8_t val = (uint8_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (ptr == NULL) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+
+        vm->ip++;
     } break;
 
     default: {
