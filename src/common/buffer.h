@@ -27,18 +27,18 @@ typedef struct Buffer {
     size_t cap;
 } Buffer;
 
-BUFFERDEF void buffer_ensure(Buffer *, size_t);
-BUFFERDEF Buffer *new_buffer(size_t cap);
-BUFFERDEF void buffer_clear(Buffer *);
-BUFFERDEF void buffer_free(Buffer *);
-BUFFERDEF void buffer_append_char(Buffer *, char);
-BUFFERDEF void buffer_append_bytes(Buffer *, const void *ptr, size_t bytes);
-BUFFERDEF void buffer_append_str(Buffer *, const char *str, size_t len);
-BUFFERDEF void buffer_append_cstr(Buffer *, const char *cstr);
-BUFFERDEF void buffer_append_fmt(Buffer *, const char *format, ...) PRINTF_FORMAT(2, 3);
-BUFFERDEF void buffer_append_file(Buffer *, const char *path);
-BUFFERDEF void buffer_write_to_file(const Buffer *buf, const char *file_path);
-BUFFERDEF void buffer_rewind(Buffer *, size_t prev_sz);
+BUFFERDEF void      buffer_ensure        (Buffer *, size_t);
+BUFFERDEF Buffer *  new_buffer           (size_t cap);
+BUFFERDEF void      buffer_clear         (Buffer *);
+BUFFERDEF void      buffer_free          (Buffer *);
+BUFFERDEF void      buffer_append_char   (Buffer *, char);
+BUFFERDEF void      buffer_append_bytes  (Buffer *, const void *ptr, size_t bytes);
+BUFFERDEF void      buffer_append_str    (Buffer *, const char *str, size_t len);
+BUFFERDEF void      buffer_append_cstr   (Buffer *, const char *cstr);
+BUFFERDEF void      buffer_append_fmt    (Buffer *, const char *format, ...) PRINTF_FORMAT (2, 3);
+BUFFERDEF void      buffer_append_file   (Buffer *, const char *path);
+BUFFERDEF void      buffer_write_to_file (const Buffer *buf, const char *file_path);
+BUFFERDEF void      buffer_rewind        (Buffer *, size_t prev_sz);
 
 #ifdef __cplusplus
 }
