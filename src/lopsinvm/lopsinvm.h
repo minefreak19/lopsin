@@ -83,8 +83,6 @@ typedef enum {
     LOPSIN_INST_RET,
     LOPSIN_INST_NCALL,
 
-    LOPSIN_INST_CAST,
-
     COUNT_LOPSIN_INST_TYPES
 } LopsinInstType;
 

@@ -20,7 +20,7 @@
 #define NATIVES_IMPLEMENTATION
 #include "./natives.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 33, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -60,8 +60,6 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_CALL]          = "call",
     [LOPSIN_INST_RET]           = "ret",
     [LOPSIN_INST_NCALL]         = "ncall",
-
-    [LOPSIN_INST_CAST]          = "cast",
 };
 
 static_assert(COUNT_LOPSIN_ERRS == 11, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
@@ -110,7 +108,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 33, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -148,7 +146,6 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_CRJMP:
     case LOPSIN_INST_CALL:
     case LOPSIN_INST_NCALL:
-    case LOPSIN_INST_CAST:
         return true;
 
     default: {
@@ -172,7 +169,7 @@ bool requires_operand(LopsinInstType insttype)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 34, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 33, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
     
     if (!vm->running) {
         return ERR_HALTED;
@@ -416,10 +413,6 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         
         vm->ip++; 
         // if the natives want to keep the ip they can just ip-- it.
-    } break;
-
-    case LOPSIN_INST_CAST: {
-        UNIMPLEMENTED;
     } break;
 
     default: {
