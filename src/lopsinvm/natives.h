@@ -12,12 +12,10 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#define NATIVE(name) LopsinErr lopsin_native_##name(LopsinVM *)
-
 static_assert(COUNT_LOPSIN_NATIVES == 3, "Exhaustive definition of native functions");
-NATIVE(dump);
-NATIVE(putc);
-NATIVE(read);
+LopsinErr lopsin_native_dump (LopsinVM *vm);
+LopsinErr lopsin_native_putc (LopsinVM *vm);
+LopsinErr lopsin_native_read (LopsinVM *vm);
 
 #ifdef __cplusplus
 }
