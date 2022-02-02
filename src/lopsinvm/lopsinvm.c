@@ -187,12 +187,13 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     LopsinInst inst = vm->program.insts[vm->ip];
     
     if (vm->debug_mode) {
+        lopvm_dump_stack(stdout, vm);
+
         fprintf(stdout, "Current instruction: %s ", 
             LOPSIN_INST_TYPE_NAMES[inst.type]);
         lopsinvalue_print(stdout, inst.operand);
         fprintf(stdout, "\n");
-
-        lopvm_dump_stack(stdout, vm);
+        fprintf(stdout, "==============================\n");
     }
 
     switch (inst.type) {
