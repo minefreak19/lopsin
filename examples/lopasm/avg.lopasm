@@ -1,7 +1,7 @@
 call main hlt
 
 putcstr:
-	putc
+	ncall putc
 	dup 1
 	cast bool
 	cjmp putcstr
@@ -15,7 +15,7 @@ main:
 	push ':'
 	push 'N'
 	call putcstr 
-	read
+	ncall read
 	dup 1
 
 	push 0 // sum
@@ -23,7 +23,7 @@ main:
 
 main.loop:
 	swap 1
-	read
+	ncall read
 	sum
 	swap 1
 
@@ -48,6 +48,7 @@ main.loop:
 	drop 1
 	swap 1
 	div
-	dump
+	ncall dump
+	push '\n' ncall putc
 
 	ret
