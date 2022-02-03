@@ -175,7 +175,7 @@ bool requires_operand(LopsinInstType insttype)
         LopsinValue b = (vm)->dstack[--(vm)->dsp];                             \
                                                                                \
         (vm)->dstack[(vm)->dsp++].as_##out = b.as_##in op a.as_##in;           \
-        (vm)->ip++; \
+        (vm)->ip++;                                                            \
     } while (0)
 
 static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out) 
@@ -433,7 +433,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (idx < 0 || idx > COUNT_LOPSIN_NATIVES) return ERR_INVALID_OPERAND;
 
         LopsinNative native = LOPSIN_NATIVES[idx];
-        LopsinErr errlvl = (*native              .proc)(vm);
+        LopsinErr errlvl = (*native.proc)(vm);
         if (errlvl != ERR_OK) return errlvl;
         
         vm->ip++; 
