@@ -495,9 +495,9 @@ LopsinErr lopsinvm_start(LopsinVM *vm)
     return err;
 }
 
-LopsinVM lopsinvm_new(void)
+void lopsinvm_new(LopsinVM *out_vm)
 {
-    return (LopsinVM) {
+    if (out_vm) *out_vm = (LopsinVM) {
         .debug_mode = false,
         .running = false,
         

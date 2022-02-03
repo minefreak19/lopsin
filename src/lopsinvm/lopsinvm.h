@@ -165,7 +165,7 @@ extern const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES];
 bool requires_operand(LopsinInstType insttype);
 void lopsinvalue_print(FILE *stream, LopsinValue);
 
-LopsinVM lopsinvm_new(void);
+void lopsinvm_new(LopsinVM *);
 void lopsinvm_free(LopsinVM *);
 
 void lopsinvm_load_program_from_file(LopsinVM *, const char *path);

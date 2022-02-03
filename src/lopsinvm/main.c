@@ -56,7 +56,9 @@ int main(int argc, const char **argv)
         fprintf(stderr, "ERROR: No input file provided\n");
         exit(1);
     }
-    LopsinVM vm = lopsinvm_new();
+
+    static LopsinVM vm; 
+    lopsinvm_new(&vm);
     vm.debug_mode = args.debug_mode;
 
     lopsinvm_load_program_from_file(&vm, args.input_file);
