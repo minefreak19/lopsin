@@ -1,14 +1,40 @@
 call main hlt
 
+!16:
+	// x p
+	swap  1 // p x	
+	dup   1 // p x x
+	push  255 // p x x 255
+	band // p x (x & 0xff)
+	dup 3 drop 2 // p x (x & 0xff) p
+	memwr // p x
+	push 8 shr
+	push 255 band // p ((x >> 8) & 0xff)
+	swap 1 push 1 sum 
+	memwr
+		
+	ret
+
+@16: 
+	// p
+	dup 1 memrd // p (x & 0xff)
+	swap 1 // (x & 0xff) p
+	push 1 sum // (x & 0xff) (p+1)
+	memrd // (x & 0xff) ((x >> 8) & 0xff)
+	push 8 shl bor
+	ret
+
 main:
 	push 32
  	ncall malloc
- 	dup  1
- 	push 127
+ 	dup  1 dup 1
+ 	ncall read
  	swap 1
- 	memwr
+ 	call !16
 	
- 	push 32 sum
 	// push 33 sum ; leads to an error
-	memrd ncall dump
+	call @16 
+	ncall dump
+	push '\n' ncall putc
+	ncall free
  	ret

@@ -85,13 +85,15 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
     [ERR_DIV_BY_ZERO]       = "Division by zero",
 };
 
+#define NATIVE(x) { .name = #x, .proc = &lopsin_native_##x }
+
 static_assert(COUNT_LOPSIN_NATIVES == 5, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
 const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
-    [LOPSIN_NATIVE_DUMP]   = { .name = "dump", .proc = &lopsin_native_dump },
-    [LOPSIN_NATIVE_PUTC]   = { .name = "putc", .proc = &lopsin_native_putc },
-    [LOPSIN_NATIVE_READ]   = { .name = "read", .proc = &lopsin_native_read },
-    [LOPSIN_NATIVE_MALLOC] = { .name = "malloc", .proc = &lopsin_native_malloc },
-    [LOPSIN_NATIVE_FREE]   = { .name = "free", .proc = &lopsin_native_free },
+    [LOPSIN_NATIVE_DUMP]   = NATIVE(dump),
+    [LOPSIN_NATIVE_PUTC]   = NATIVE(putc),
+    [LOPSIN_NATIVE_READ]   = NATIVE(read),
+    [LOPSIN_NATIVE_MALLOC] = NATIVE(malloc),
+    [LOPSIN_NATIVE_FREE]   = NATIVE(free),
 };
 
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
@@ -431,7 +433,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         if (idx < 0 || idx > COUNT_LOPSIN_NATIVES) return ERR_INVALID_OPERAND;
 
         LopsinNative native = LOPSIN_NATIVES[idx];
-        LopsinErr errlvl = (*native.proc)(vm);
+        LopsinErr errlvl = (*native              .proc)(vm);
         if (errlvl != ERR_OK) return errlvl;
         
         vm->ip++; 
