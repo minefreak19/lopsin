@@ -89,7 +89,7 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
 
 static_assert(COUNT_LOPSIN_NATIVES == 5, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
 const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
-    [LOPSIN_NATIVE_DUMP]   = NATIVE(dump),
+    [LOPSIN_NATIVE_PUTI]   = NATIVE(puti),
     [LOPSIN_NATIVE_PUTC]   = NATIVE(putc),
     [LOPSIN_NATIVE_READ]   = NATIVE(read),
     [LOPSIN_NATIVE_MALLOC] = NATIVE(malloc),

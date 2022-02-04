@@ -96,6 +96,8 @@ static bool parse_identifier_value(const Parser *parser, Token token, LopsinValu
         }
     }
 
+    fprintf(stderr, "ERROR: Unknown identifier `"SV_Fmt"`\n", SV_Arg(token.text));
+    exit(1);
     return false;
 }
 

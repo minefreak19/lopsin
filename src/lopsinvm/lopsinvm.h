@@ -93,7 +93,7 @@ typedef enum {
 } LopsinInstType;
 
 typedef enum {
-    LOPSIN_NATIVE_DUMP = 0,
+    LOPSIN_NATIVE_PUTI,
     LOPSIN_NATIVE_PUTC,
     LOPSIN_NATIVE_READ,
     LOPSIN_NATIVE_MALLOC,

@@ -34,7 +34,7 @@ main:
 	
 	// push 33 sum ; leads to an error
 	call @16 
-	ncall dump
+	ncall puti
 	push '\n' ncall putc
 	ncall free
  	ret

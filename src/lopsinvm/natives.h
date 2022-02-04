@@ -13,7 +13,7 @@ extern "C"
 #endif /* __cplusplus */
 
 static_assert(COUNT_LOPSIN_NATIVES == 5, "Exhaustive definition of native functions");
-LopsinErr lopsin_native_dump   (LopsinVM *vm);
+LopsinErr lopsin_native_puti   (LopsinVM *vm);
 LopsinErr lopsin_native_putc   (LopsinVM *vm);
 LopsinErr lopsin_native_read   (LopsinVM *vm);
 LopsinErr lopsin_native_malloc (LopsinVM *vm);
@@ -31,10 +31,10 @@ LopsinErr lopsin_native_free   (LopsinVM *vm);
 #include <stdio.h>
 #include "./lopsinvm.h"
 
-LopsinErr lopsin_native_dump(LopsinVM *vm)
+LopsinErr lopsin_native_puti(LopsinVM *vm)
 {
     if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
-    lopsinvalue_print(stdout, vm->dstack[--vm->dsp]);
+    printf("%"PRId64, vm->dstack[--vm->dsp].as_i64);
     return ERR_OK;
 }
 
