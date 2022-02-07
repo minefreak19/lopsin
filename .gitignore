@@ -10,3 +10,6 @@ test
 
 # binaries
 bin/
+
+# random shell scripts
+*.sh
