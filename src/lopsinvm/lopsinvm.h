@@ -9,6 +9,7 @@ Created 05 January 2022
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -103,8 +104,11 @@ typedef enum {
 
 typedef struct {
     LopsinInstType type;
+    uint32_t _explicit_padding;
     LopsinValue operand;
 } LopsinInst;
+
+static_assert(sizeof(LopsinInst) == 16, "");
 
 #define LOPSINVM_DEFAULT_PROGRAM_COUNT 1024
 #define LOPSINVM_DEFAULT_DSTACK_CAP 1024
