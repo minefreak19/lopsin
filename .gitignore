@@ -7,6 +7,8 @@ nobuild
 
 # testing
 test
+*test*
+test.*
 
 # binaries
 bin/
