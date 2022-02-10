@@ -9,6 +9,7 @@
 const char * const MODULES[] = {
     "lopsinvm",
     "lopasm",
+    "lopsin",
 };
 
 bool starts_with(Cstr cstr, Cstr prefix)
