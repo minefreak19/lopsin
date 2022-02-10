@@ -102,6 +102,20 @@ int main(int argc, const char **argv)
     assert(*argv != NULL);
 
     GO_REBUILD_URSELF(argc, argv);
+
+    if (is_path1_modified_after_path2("./nobuild.common.h", argv[0])) {
+        RENAME(argv[0], CONCAT(argv[0], ".old"));
+        REBUILD_URSELF(argv[0], __FILE__);
+        Cmd cmd = {
+            .line = {
+                .elems = (Cstr*) argv,
+                .count = argc,
+            },
+        };
+        INFO("CMD: %s", cmd_show(cmd));
+        cmd_run_sync(cmd);
+        exit(0);
+    }
     
     const char *program = *argv++;
 
