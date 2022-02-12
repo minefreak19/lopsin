@@ -20,7 +20,7 @@
 #define NATIVES_IMPLEMENTATION
 #include "./natives.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 43, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -29,6 +29,15 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_DROP]          = "drop",
     [LOPSIN_INST_DUP]           = "dup",
     [LOPSIN_INST_SWAP]          = "swap",
+
+    [LOPSIN_INST_R8]            = "@8",
+    [LOPSIN_INST_R16]           = "@16",
+    [LOPSIN_INST_R32]           = "@32",
+    [LOPSIN_INST_R64]           = "@64",
+    [LOPSIN_INST_W8]            = "!8",
+    [LOPSIN_INST_W16]           = "!16",
+    [LOPSIN_INST_W32]           = "!32",
+    [LOPSIN_INST_W64]           = "!64",
 
     [LOPSIN_INST_SUM]           = "sum",
     [LOPSIN_INST_SUB]           = "sub",
@@ -117,7 +126,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 43, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -145,6 +154,14 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_RET:
     case LOPSIN_INST_MEMRD:
     case LOPSIN_INST_MEMWR:
+    case LOPSIN_INST_R8:
+    case LOPSIN_INST_R16:
+    case LOPSIN_INST_R32:
+    case LOPSIN_INST_R64:
+    case LOPSIN_INST_W8:
+    case LOPSIN_INST_W16:
+    case LOPSIN_INST_W32:
+    case LOPSIN_INST_W64:
         return false;
 
     case LOPSIN_INST_PUSH:
@@ -193,7 +210,7 @@ static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 43, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
 
     if (!vm->running) {
         return ERR_HALTED;
@@ -290,6 +307,101 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         vm->ip++;
     } break;
 
+    case LOPSIN_INST_R8: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_R16: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint16_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_R32: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint32_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_R64: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint64_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W8: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint8_t val = (uint8_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W16: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint16_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint16_t val = (uint16_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W32: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint32_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint32_t val = (uint32_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W64: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint64_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint64_t val = (uint64_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
 
     case LOPSIN_INST_SUM: {
         BINARY_OP(vm, i64, i64, +);

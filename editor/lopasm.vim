@@ -5,7 +5,9 @@ if exists("b:current_syntax")
 	finish
 endif
 
-syntax keyword lopasmKeywords nop hlt push drop dup swap sum sub mul div mod shl shr bor band xor bnot lor land lnot gt lt gte lte eq neq jmp cjmp rjmp crjmp call ret ncall cast
+set iskeyword+=_,!,@-@
+
+syntax keyword lopasmKeywords nop hlt push drop dup swap sum sub mul div mod shl shr bor band xor bnot lor land lnot gt lt gte lte eq neq jmp cjmp rjmp crjmp call ret ncall cast @8 @16 @32 @64 !8 !16 !32 !64
 
 syntax match lopasmLabel "\w\+:"
 
