@@ -12,12 +12,13 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-static_assert(COUNT_LOPSIN_NATIVES == 5, "Exhaustive definition of native functions");
+static_assert(COUNT_LOPSIN_NATIVES == 6, "Exhaustive declaration of native functions");
 LopsinErr lopsin_native_puti   (LopsinVM *vm);
 LopsinErr lopsin_native_putc   (LopsinVM *vm);
 LopsinErr lopsin_native_read   (LopsinVM *vm);
 LopsinErr lopsin_native_malloc (LopsinVM *vm);
 LopsinErr lopsin_native_free   (LopsinVM *vm);
+LopsinErr lopsin_native_time   (LopsinVM *vm);
 
 #ifdef __cplusplus
 }
@@ -29,8 +30,12 @@ LopsinErr lopsin_native_free   (LopsinVM *vm);
 #undef NATIVES_IMPLEMENTATION
 
 #include <stdio.h>
+#include <time.h>
+#include <string.h>
+#include <errno.h>
 #include "./lopsinvm.h"
 
+static_assert(COUNT_LOPSIN_NATIVES == 6, "Exhaustive definition of native functions");
 LopsinErr lopsin_native_puti(LopsinVM *vm)
 {
     if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
@@ -97,6 +102,22 @@ LopsinErr lopsin_native_free(LopsinVM *vm)
 
     vm->alloced_count--;
     free(ptr);
+    return ERR_OK;
+}
+
+// TODO: `time` native gives time in seconds, not milliseconds
+LopsinErr lopsin_native_time(LopsinVM *vm)
+{
+    static_assert(sizeof(time_t) <= sizeof(uint64_t), "Make sure time_t fits in VM stack");
+    time_t cTime = time(NULL);
+    if (cTime < 0) {
+        fprintf(stderr, "ERROR: Could not get time: %s\n", strerror(errno));
+        return ERR_NATIVE_ERROR;
+    }
+
+    if (vm->dsp >= vm->dstack_cap) return ERR_DSTACK_OVERFLOW;
+
+    vm->dstack[vm->dsp++].as_i64 = cTime;
     return ERR_OK;
 }
 
