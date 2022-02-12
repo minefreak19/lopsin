@@ -1,7 +1,7 @@
 LOPASM = ../../bin/lopasm
 LOPSINVM = ../../bin/lopsinvm
 
-LOPASMFLAGS += --vm $(LOPSINVM) 
+LOPASMFLAGS += --vm $(LOPSINVM)
 
 LOPASM_SRC = $(wildcard *.lopasm)
 LOPSINVM_OUT = $(LOPASM_SRC:lopasm=lopsinvm)

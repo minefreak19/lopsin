@@ -22,7 +22,7 @@ void build_module(Mode mode, const char *module)
 {
     Cstr module_nobuild_c = PATH(SRCDIR, module, "nobuild.c");
     Cstr module_nobuild   = PATH(SRCDIR, module, "nobuild");
-    
+
     if (!PATH_EXISTS(module_nobuild)) {
         if (PATH_EXISTS(module_nobuild_c)) {
             CMD(
@@ -48,7 +48,7 @@ void build_module(Mode mode, const char *module)
     // Cstr srcpath = PATH(SRCDIR, module);
     // Cstr_Array srcfiles = {0};
     // FOREACH_FILE_IN_DIR(srcfile, srcpath, {
-    //     if (!(IS_DIR(srcfile)) 
+    //     if (!(IS_DIR(srcfile))
     //       && (ENDS_WITH(srcfile, ".c")))
     //     {
     //         srcfiles = cstr_array_append(srcfiles, PATH(srcpath, srcfile));
@@ -116,7 +116,7 @@ int main(int argc, const char **argv)
         cmd_run_sync(cmd);
         exit(0);
     }
-    
+
     const char *program = *argv++;
 
     const char *mode_text = *argv++;
@@ -141,7 +141,7 @@ int main(int argc, const char **argv)
             RM(PATH(BINDIR, module));
 
             FOREACH_FILE_IN_DIR(file, module_path, {
-                if ((strcmp(file, "nobuild") == 0) 
+                if ((strcmp(file, "nobuild") == 0)
                  || (starts_with(file, "nobuild") && ENDS_WITH(file, ".old")))
                 {
                     RM(PATH(module_path, file));

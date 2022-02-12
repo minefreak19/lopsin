@@ -17,7 +17,7 @@
 #define SV_IMPLEMENTATION
 #include <sv.h>
 // <sv.h> is included by lopasm.h
-#undef SV_IMPLEMENTATION 
+#undef SV_IMPLEMENTATION
 
 #define BUFFER_IMPLEMENTATION
 #include <buffer.h>
@@ -26,9 +26,9 @@
 
 static void usage(FILE *stream, const char *program_name)
 {
-    fprintf(stream, "USAGE: %s <input.lopasm> -o <output.lopsinvm> [OPTIONS]\n", 
+    fprintf(stream, "USAGE: %s <input.lopasm> -o <output.lopsinvm> [OPTIONS]\n",
             program_name);
-    fprintf(stream, 
+    fprintf(stream,
         "OPTIONS:\n"
         "   --debug, -d             Enable debugging mode\n"
         "   --help,  -h             Print this help message and exit\n"
@@ -48,7 +48,7 @@ int main(int argc, const char **argv)
     struct {
         const char *input_path;
         const char *output_path;
-        
+
         const char *vm_path;
         bool debug_mode;
         bool run;
@@ -71,7 +71,7 @@ int main(int argc, const char **argv)
             args.debug_mode = true;
         } else if (cstreq(arg, "--vm")) {
             args.vm_path = *argv++;
-            
+
             #ifdef _WIN32
             fprintf(stderr, "WARN: shebang is not supported on Windows\n");
             #endif
@@ -199,7 +199,7 @@ int main(int argc, const char **argv)
             Buffer *cmd_path_buf = new_buffer(0);
 
             // we're assuming vm_path is properly relative ie ./bin/lopsinvm, not bin/lopsinvm
-            buffer_append_cstr(cmd_path_buf, args.vm_path); 
+            buffer_append_cstr(cmd_path_buf, args.vm_path);
             buffer_append_char(cmd_path_buf, ' ');
             buffer_append_cstr(cmd_path_buf, args.output_path);
             buffer_append_char(cmd_path_buf, '\0');
@@ -231,12 +231,12 @@ int main(int argc, const char **argv)
                     printf("Process exited \033[92;1mnormally\033[0m.\n");
                 }
             }
-#           else 
+#           else
 #           error posix or windows pls
 #           endif
 
             if (status < 0) {
-                fprintf(stderr, "ERROR: Could not execute command `%s`: %s", 
+                fprintf(stderr, "ERROR: Could not execute command `%s`: %s",
                         cmd_path_buf->data, strerror(errno));
                 exit(1);
             }

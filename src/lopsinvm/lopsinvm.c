@@ -29,7 +29,7 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_DROP]          = "drop",
     [LOPSIN_INST_DUP]           = "dup",
     [LOPSIN_INST_SWAP]          = "swap",
-    
+
     [LOPSIN_INST_SUM]           = "sum",
     [LOPSIN_INST_SUB]           = "sub",
     [LOPSIN_INST_MUL]           = "mul",
@@ -45,14 +45,14 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_LOR]           = "lor",
     [LOPSIN_INST_LAND]          = "land",
     [LOPSIN_INST_LNOT]          = "lnot",
-    
+
     [LOPSIN_INST_GT]            = "gt",
     [LOPSIN_INST_LT]            = "lt",
     [LOPSIN_INST_GTE]           = "gte",
     [LOPSIN_INST_LTE]           = "lte",
     [LOPSIN_INST_EQ]            = "eq",
     [LOPSIN_INST_NEQ]           = "neq",
-    
+
     [LOPSIN_INST_JMP]           = "jmp",
     [LOPSIN_INST_CJMP]          = "cjmp",
     [LOPSIN_INST_RJMP]          = "rjmp",
@@ -98,12 +98,12 @@ const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
 
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 {
-    fprintf(stream, 
+    fprintf(stream,
         "Stack pointer: %zu\n"
         "Inst pointer:  %zu\n"
         "Stack: \n",
-        
-        vm->dsp, 
+
+        vm->dsp,
         vm->ip);
 
     for (size_t i = 0; i < vm->dsp; i++) {
@@ -178,7 +178,7 @@ bool requires_operand(LopsinInstType insttype)
         (vm)->ip++;                                                            \
     } while (0)
 
-static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out) 
+static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out)
 {
     uintptr_t ptr = (uintptr_t) memptr;
     for (size_t i = 0; i < vm->alloced_count; i++) {
@@ -194,7 +194,7 @@ static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out)
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
     static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
-    
+
     if (!vm->running) {
         return ERR_HALTED;
     }
@@ -203,11 +203,11 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         return ERR_BAD_INST_PTR;
     }
     LopsinInst inst = vm->program.insts[vm->ip];
-    
+
     if (vm->debug_mode) {
         lopvm_dump_stack(stdout, vm);
 
-        fprintf(stdout, "Current instruction: %s ", 
+        fprintf(stdout, "Current instruction: %s ",
             LOPSIN_INST_TYPE_NAMES[inst.type]);
         lopsinvalue_print(stdout, inst.operand);
         fprintf(stdout, "\n");
@@ -215,7 +215,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     }
 
     switch (inst.type) {
-    
+
     case LOPSIN_INST_NOP: {
         vm->ip++;
     } break;
@@ -435,8 +435,8 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         LopsinNative native = LOPSIN_NATIVES[idx];
         LopsinErr errlvl = (*native.proc)(vm);
         if (errlvl != ERR_OK) return errlvl;
-        
-        vm->ip++; 
+
+        vm->ip++;
         // if the natives want to keep the ip they can just ip-- it.
     } break;
 
@@ -458,7 +458,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         uint8_t val = (uint8_t) vm->dstack[--vm->dsp].as_i64;
 
         if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
-        
+
         *ptr = val;
 
         vm->ip++;
@@ -468,13 +468,13 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         return ERR_ILLEGAL_INST;
     }
     }
-    
+
     return ERR_OK;
 }
 
 void lopsinvalue_print(FILE *stream, LopsinValue value)
 {
-    fprintf(stream, "%"PRId64, value.as_i64); 
+    fprintf(stream, "%"PRId64, value.as_i64);
     // TODO exhaustive printing
 }
 
@@ -500,14 +500,14 @@ void lopsinvm_new(LopsinVM *out_vm)
     if (out_vm) *out_vm = (LopsinVM) {
         .debug_mode = false,
         .running = false,
-        
+
         .ip = 0,
         .program = {
             .insts = NULL,
             .count = 0,
             .cap = 0,
         },
-        
+
         .dsp = 0,
         .dstack = NOTNULL(calloc(LOPSINVM_DEFAULT_DSTACK_CAP, sizeof(LopsinValue))),
         .dstack_cap = LOPSINVM_DEFAULT_DSTACK_CAP,
@@ -534,14 +534,14 @@ void lopsinvm_free(LopsinVM *vm)
     free(vm->program.insts);
 }
 
-static inline bool sv_try_chop_by_sv_left(String_View *sv, 
-                                   const String_View thicc_delim, 
+static inline bool sv_try_chop_by_sv_left(String_View *sv,
+                                   const String_View thicc_delim,
                                    String_View *out)
 {
     String_View window = sv_from_parts(sv->data, thicc_delim.count);
     size_t i = 0;
-    while (i + thicc_delim.count < sv->count 
-        && !(sv_eq(window, thicc_delim))) 
+    while (i + thicc_delim.count < sv->count
+        && !(sv_eq(window, thicc_delim)))
     {
         i++;
         window.data++;
@@ -552,7 +552,7 @@ static inline bool sv_try_chop_by_sv_left(String_View *sv,
     if (i + thicc_delim.count == sv->count) {
         return false;
     }
-    
+
     // Chop!
     sv->data  += i + thicc_delim.count;
     sv->count -= i + thicc_delim.count;

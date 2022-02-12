@@ -12,7 +12,7 @@
 static void usage(FILE *stream, const char *program)
 {
     fprintf(stream, "USAGE: %s <input.lopsinvm> [OPTIONS]\n", program);
-    fprintf(stream, 
+    fprintf(stream,
         "OPTIONS:\n"
         "   --debug, -d             Enable debug mode\n"
         "   --help,  -h             Display this help and exit\n");
@@ -33,7 +33,7 @@ int main(int argc, const char **argv)
 
     while (*argv != NULL) {
         const char *arg = *argv++;
-        
+
         if (cstreq(arg, "--help") || cstreq(arg, "-h")) {
             usage(stdout, program_name);
             exit(0);
@@ -57,7 +57,7 @@ int main(int argc, const char **argv)
         exit(1);
     }
 
-    static LopsinVM vm; 
+    static LopsinVM vm;
     lopsinvm_new(&vm);
     vm.debug_mode = args.debug_mode;
 

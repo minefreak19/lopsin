@@ -16,7 +16,7 @@ static inline bool notisspace(char c)
 }
 
 // please the pedentic compiler!
-static inline bool is_space(char c) 
+static inline bool is_space(char c)
 {
     return isspace(c);
 }
@@ -29,7 +29,7 @@ static inline String_View sv_chop_by_whitespace(String_View *sv)
 static bool sv_try_chop_i64(String_View *sv, int radix, int64_t *out)
 {
     char *contents = NOTNULL(malloc((sv->count + 1) * sizeof(char)));
-    
+
     memcpy(contents, sv->data, sv->count);
     contents[sv->count] = '\0';
 
@@ -39,7 +39,7 @@ static bool sv_try_chop_i64(String_View *sv, int radix, int64_t *out)
     size_t len = endptr - contents;
     free(contents);
 
-    if (len == 0) 
+    if (len == 0)
         return false;
     else {
         sv->count -= len;
@@ -52,7 +52,7 @@ static bool sv_try_chop_i64(String_View *sv, int radix, int64_t *out)
 
 static char parse_char_lit(String_View chartext)
 {
-    if (!sv_eq(sv_chop_left(&chartext, 1), 
+    if (!sv_eq(sv_chop_left(&chartext, 1),
                (String_View) SV_STATIC("'")))
     {
         return '\0';
@@ -182,7 +182,7 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 {
     lexer->source = sv_trim_left(lexer->source);
 
-    if (sv_starts_with(lexer->source, (String_View) SV_STATIC("//")) 
+    if (sv_starts_with(lexer->source, (String_View) SV_STATIC("//"))
         || sv_starts_with(lexer->source, (String_View) SV_STATIC("#"))
         || sv_starts_with(lexer->source, (String_View) SV_STATIC(";")))
     {
@@ -203,7 +203,7 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 
     if (lex_tok_as_inst(&result)) {
     } else if (lex_tok_as_i64(&result)) {
-    } else if (lex_tok_as_char(&result)) {  
+    } else if (lex_tok_as_char(&result)) {
     } else if (lex_tok_as_label_def(&result)) {
     } else if (lex_tok_as_identifier(&result)) {
     } else {
@@ -216,8 +216,8 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 
 void lopasm_print_token(FILE *stream, Token token)
 {
-    fprintf(stream, 
+    fprintf(stream,
         "Token (%02d):\t`"SV_Fmt"`\n",
-            token.type, 
+            token.type,
             SV_Arg(token.text));
 }

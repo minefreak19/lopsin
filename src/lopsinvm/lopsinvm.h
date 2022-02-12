@@ -32,7 +32,7 @@ typedef enum {
 
     ERR_RSTACK_UNDERFLOW,
     ERR_RSTACK_OVERFLOW,
-    
+
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
     // TODO: more specialised memory errors
