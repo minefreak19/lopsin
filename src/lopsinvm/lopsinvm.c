@@ -20,7 +20,7 @@
 #define NATIVES_IMPLEMENTATION
 #include "./natives.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 41, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
@@ -29,7 +29,16 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_DROP]          = "drop",
     [LOPSIN_INST_DUP]           = "dup",
     [LOPSIN_INST_SWAP]          = "swap",
-    
+
+    [LOPSIN_INST_R8]            = "@8",
+    [LOPSIN_INST_R16]           = "@16",
+    [LOPSIN_INST_R32]           = "@32",
+    [LOPSIN_INST_R64]           = "@64",
+    [LOPSIN_INST_W8]            = "!8",
+    [LOPSIN_INST_W16]           = "!16",
+    [LOPSIN_INST_W32]           = "!32",
+    [LOPSIN_INST_W64]           = "!64",
+
     [LOPSIN_INST_SUM]           = "sum",
     [LOPSIN_INST_SUB]           = "sub",
     [LOPSIN_INST_MUL]           = "mul",
@@ -45,14 +54,14 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_LOR]           = "lor",
     [LOPSIN_INST_LAND]          = "land",
     [LOPSIN_INST_LNOT]          = "lnot",
-    
+
     [LOPSIN_INST_GT]            = "gt",
     [LOPSIN_INST_LT]            = "lt",
     [LOPSIN_INST_GTE]           = "gte",
     [LOPSIN_INST_LTE]           = "lte",
     [LOPSIN_INST_EQ]            = "eq",
     [LOPSIN_INST_NEQ]           = "neq",
-    
+
     [LOPSIN_INST_JMP]           = "jmp",
     [LOPSIN_INST_CJMP]          = "cjmp",
     [LOPSIN_INST_RJMP]          = "rjmp",
@@ -60,9 +69,6 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_CALL]          = "call",
     [LOPSIN_INST_RET]           = "ret",
     [LOPSIN_INST_NCALL]         = "ncall",
-
-    [LOPSIN_INST_MEMRD]         = "memrd",
-    [LOPSIN_INST_MEMWR]         = "memwr",
 };
 
 static_assert(COUNT_LOPSIN_ERRS == 13, "Exhaustive definition of LOPSIN_ERR_NAMES with respct to LopsinErr's");
@@ -98,12 +104,12 @@ const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
 
 static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 {
-    fprintf(stream, 
+    fprintf(stream,
         "Stack pointer: %zu\n"
         "Inst pointer:  %zu\n"
         "Stack: \n",
-        
-        vm->dsp, 
+
+        vm->dsp,
         vm->ip);
 
     for (size_t i = 0; i < vm->dsp; i++) {
@@ -117,7 +123,7 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 41, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
@@ -143,8 +149,14 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_EQ:
     case LOPSIN_INST_NEQ:
     case LOPSIN_INST_RET:
-    case LOPSIN_INST_MEMRD:
-    case LOPSIN_INST_MEMWR:
+    case LOPSIN_INST_R8:
+    case LOPSIN_INST_R16:
+    case LOPSIN_INST_R32:
+    case LOPSIN_INST_R64:
+    case LOPSIN_INST_W8:
+    case LOPSIN_INST_W16:
+    case LOPSIN_INST_W32:
+    case LOPSIN_INST_W64:
         return false;
 
     case LOPSIN_INST_PUSH:
@@ -178,7 +190,7 @@ bool requires_operand(LopsinInstType insttype)
         (vm)->ip++;                                                            \
     } while (0)
 
-static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out) 
+static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out)
 {
     uintptr_t ptr = (uintptr_t) memptr;
     for (size_t i = 0; i < vm->alloced_count; i++) {
@@ -193,8 +205,8 @@ static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 35, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
-    
+    static_assert(COUNT_LOPSIN_INST_TYPES == 41, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+
     if (!vm->running) {
         return ERR_HALTED;
     }
@@ -203,11 +215,11 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         return ERR_BAD_INST_PTR;
     }
     LopsinInst inst = vm->program.insts[vm->ip];
-    
+
     if (vm->debug_mode) {
         lopvm_dump_stack(stdout, vm);
 
-        fprintf(stdout, "Current instruction: %s ", 
+        fprintf(stdout, "Current instruction: %s ",
             LOPSIN_INST_TYPE_NAMES[inst.type]);
         lopsinvalue_print(stdout, inst.operand);
         fprintf(stdout, "\n");
@@ -215,7 +227,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     }
 
     switch (inst.type) {
-    
+
     case LOPSIN_INST_NOP: {
         vm->ip++;
     } break;
@@ -290,6 +302,101 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         vm->ip++;
     } break;
 
+    case LOPSIN_INST_R8: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_R16: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint16_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_R32: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint32_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_R64: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        uint64_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        // there should be space, since we popped one
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_i64 = *ptr;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W8: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint8_t val = (uint8_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W16: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint16_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint16_t val = (uint16_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W32: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint32_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint32_t val = (uint32_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_W64: {
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        uint64_t *ptr = vm->dstack[--vm->dsp].as_ptr;
+        uint64_t val = (uint64_t) vm->dstack[--vm->dsp].as_i64;
+
+        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
+
+        *ptr = val;
+        vm->ip++;
+    } break;
 
     case LOPSIN_INST_SUM: {
         BINARY_OP(vm, i64, i64, +);
@@ -435,46 +542,22 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         LopsinNative native = LOPSIN_NATIVES[idx];
         LopsinErr errlvl = (*native.proc)(vm);
         if (errlvl != ERR_OK) return errlvl;
-        
-        vm->ip++; 
+
+        vm->ip++;
         // if the natives want to keep the ip they can just ip-- it.
-    } break;
-
-    case LOPSIN_INST_MEMRD: {
-        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
-        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
-
-        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
-
-        if (ptr == NULL) return ERR_BAD_MEM_PTR;
-
-        vm->dstack[vm->dsp++].as_i64 = *ptr;
-        vm->ip++;
-    } break;
-
-    case LOPSIN_INST_MEMWR: {
-        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
-        uint8_t *ptr = vm->dstack[--vm->dsp].as_ptr;
-        uint8_t val = (uint8_t) vm->dstack[--vm->dsp].as_i64;
-
-        if (!lopsinvm_chkmem(vm, ptr, NULL)) return ERR_BAD_MEM_PTR;
-        
-        *ptr = val;
-
-        vm->ip++;
     } break;
 
     default: {
         return ERR_ILLEGAL_INST;
     }
     }
-    
+
     return ERR_OK;
 }
 
 void lopsinvalue_print(FILE *stream, LopsinValue value)
 {
-    fprintf(stream, "%"PRId64, value.as_i64); 
+    fprintf(stream, "%"PRId64, value.as_i64);
     // TODO exhaustive printing
 }
 
@@ -500,14 +583,14 @@ void lopsinvm_new(LopsinVM *out_vm)
     if (out_vm) *out_vm = (LopsinVM) {
         .debug_mode = false,
         .running = false,
-        
+
         .ip = 0,
         .program = {
             .insts = NULL,
             .count = 0,
             .cap = 0,
         },
-        
+
         .dsp = 0,
         .dstack = NOTNULL(calloc(LOPSINVM_DEFAULT_DSTACK_CAP, sizeof(LopsinValue))),
         .dstack_cap = LOPSINVM_DEFAULT_DSTACK_CAP,
@@ -534,14 +617,14 @@ void lopsinvm_free(LopsinVM *vm)
     free(vm->program.insts);
 }
 
-static inline bool sv_try_chop_by_sv_left(String_View *sv, 
-                                   const String_View thicc_delim, 
+static inline bool sv_try_chop_by_sv_left(String_View *sv,
+                                   const String_View thicc_delim,
                                    String_View *out)
 {
     String_View window = sv_from_parts(sv->data, thicc_delim.count);
     size_t i = 0;
-    while (i + thicc_delim.count < sv->count 
-        && !(sv_eq(window, thicc_delim))) 
+    while (i + thicc_delim.count < sv->count
+        && !(sv_eq(window, thicc_delim)))
     {
         i++;
         window.data++;
@@ -552,7 +635,7 @@ static inline bool sv_try_chop_by_sv_left(String_View *sv,
     if (i + thicc_delim.count == sv->count) {
         return false;
     }
-    
+
     // Chop!
     sv->data  += i + thicc_delim.count;
     sv->count -= i + thicc_delim.count;

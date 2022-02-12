@@ -45,7 +45,7 @@ LopsinErr lopsin_native_putc(LopsinVM *vm)
     return ERR_OK;
 }
 
-LopsinErr lopsin_native_read(LopsinVM *vm) 
+LopsinErr lopsin_native_read(LopsinVM *vm)
 {
     if (vm->dsp >= vm->dstack_cap) return ERR_DSTACK_OVERFLOW;
     int64_t x;

@@ -33,7 +33,7 @@ extern "C"
 #define CC (getenv("CC"))
 #endif
 
-#ifndef CXX 
+#ifndef CXX
 #define CXX (getenv("CXX"))
 #endif
 

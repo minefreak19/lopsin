@@ -142,7 +142,7 @@ bool lopasm_parser_spit_inst(LopAsm_Parser *parser, LopsinInst *out)
                 result.type = tok.as.inst.type;
                 if (requires_operand(tok.as.inst.type)) {
                     if (parser->ip >= parser->tokens_sz) {
-                        fprintf(stderr, 
+                        fprintf(stderr,
                             "ERROR: Instruction of type `%s` requires an operand (found none)\n",
                             LOPSIN_INST_TYPE_NAMES[result.type]);
 
@@ -156,8 +156,8 @@ bool lopasm_parser_spit_inst(LopAsm_Parser *parser, LopsinInst *out)
                 }
             } break;
 
-            case LOPASM_TOKEN_TYPE_LIT_INT: 
-            case LOPASM_TOKEN_TYPE_IDENTIFIER: 
+            case LOPASM_TOKEN_TYPE_LIT_INT:
+            case LOPASM_TOKEN_TYPE_IDENTIFIER:
             case LOPASM_TOKEN_TYPE_LABEL_DEF:
             {
                 fprintf(stderr, "ERROR: Unexpected token `"SV_Fmt"`\n",

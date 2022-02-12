@@ -55,7 +55,7 @@ int main(int argc, const char **argv)
     Cstr_Array cflags;
 
     switch (mode) {
-    
+
     case MODE_BUILD: {
         cflags = cstr_array_make(MODULE_BUILD_CFLAGS, MODULE_INCLUDES, NULL);
     } break;
@@ -71,7 +71,7 @@ int main(int argc, const char **argv)
     });
 
 
-    Cstr_Array srcfiles = 
+    Cstr_Array srcfiles =
 #   ifdef EXTRA_SRCFILES
         cstr_array_make(EXTRA_SRCFILES, NULL);
 #   else
@@ -80,7 +80,7 @@ int main(int argc, const char **argv)
 
     FOREACH_FILE_IN_DIR(srcfile, srcpath, {
         if (!(IS_DIR(srcfile))
-          && (ENDS_WITH(srcfile, ".c"))) 
+          && (ENDS_WITH(srcfile, ".c")))
         {
             if (strcmp(srcfile, "nobuild.c") != 0)
                 srcfiles = cstr_array_append(srcfiles, PATH(srcpath, srcfile));

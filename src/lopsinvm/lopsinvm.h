@@ -32,7 +32,7 @@ typedef enum {
 
     ERR_RSTACK_UNDERFLOW,
     ERR_RSTACK_OVERFLOW,
-    
+
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
     // TODO: more specialised memory errors
@@ -55,6 +55,15 @@ typedef enum {
     LOPSIN_INST_DROP,
     LOPSIN_INST_DUP,
     LOPSIN_INST_SWAP,
+
+    LOPSIN_INST_R8,
+    LOPSIN_INST_R16,
+    LOPSIN_INST_R32,
+    LOPSIN_INST_R64,
+    LOPSIN_INST_W8,
+    LOPSIN_INST_W16,
+    LOPSIN_INST_W32,
+    LOPSIN_INST_W64,
 
     LOPSIN_INST_SUM,
     LOPSIN_INST_SUB,
@@ -86,9 +95,6 @@ typedef enum {
     LOPSIN_INST_CALL,
     LOPSIN_INST_RET,
     LOPSIN_INST_NCALL,
-
-    LOPSIN_INST_MEMRD,
-    LOPSIN_INST_MEMWR,
 
     COUNT_LOPSIN_INST_TYPES
 } LopsinInstType;

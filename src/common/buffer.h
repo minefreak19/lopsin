@@ -80,7 +80,7 @@ BUFFERDEF Buffer *new_buffer(size_t cap)
     return result;
 }
 
-BUFFERDEF void buffer_clear(Buffer *buf) 
+BUFFERDEF void buffer_clear(Buffer *buf)
 {
     assert(buf != NULL);
     buf->size = 0;
@@ -138,7 +138,7 @@ BUFFERDEF void buffer_append_fmt(Buffer *buf, const char *format, ...)
     va_start(vargs, format);
 
     // grab an estimate
-    size_t len = vsnprintf(NULL, 0, format, vargs); 
+    size_t len = vsnprintf(NULL, 0, format, vargs);
 
     va_end(vargs);
 
@@ -217,7 +217,7 @@ BUFFERDEF void buffer_write_to_file(const Buffer *buf, const char *file_path)
     FILE *f = fopen(file_path, "wb");
 
     if (f == NULL) {
-        fprintf(stderr, "ERROR: Could not open file %s: %s\n", 
+        fprintf(stderr, "ERROR: Could not open file %s: %s\n",
                 file_path, strerror(errno));
         exit(1);
     }
@@ -241,7 +241,7 @@ BUFFERDEF void buffer_rewind(Buffer * buf, size_t prev_sz)
 {
     assert(buf != NULL);
     assert(prev_sz <= buf->size);
-    
+
     buf->size = prev_sz;
 }
 

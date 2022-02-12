@@ -3,10 +3,10 @@ call main hlt
 putcstr:
 	ncall putc
 	dup 1
-	
+
 	// effectively cast(bool), though unnecessary
-	lnot lnot 
-	
+	lnot lnot
+
 	cjmp putcstr
 	drop 1
 	ret
@@ -14,10 +14,10 @@ putcstr:
 main:
 	push '\0'
 	// the lexer doesn't seem to be able to handle `' '`
-	push 32 
+	push 32
 	push ':'
 	push 'N'
-	call putcstr 
+	call putcstr
 	ncall read
 	dup 1
 
