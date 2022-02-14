@@ -7,7 +7,7 @@ endif
 
 set iskeyword+=_,!,@-@
 
-syntax keyword lopasmKeywords nop hlt push drop dup swap sum sub mul div mod shl shr bor band xor bnot lor land lnot gt lt gte lte eq neq jmp cjmp rjmp crjmp call ret ncall cast @8 @16 @32 @64 !8 !16 !32 !64
+syntax keyword lopasmKeywords nop hlt push drop dup swap isum fsum isub fsub imul fmul idiv fdiv imod fmod shl shr bor band xor bnot lor land lnot igt fgt ilt flt igte fgte ilte flte ieq feq ineq fneq jmp cjmp rjmp crjmp call ret ncall cast @8 @16 @32 @64 !8 !16 !32 !64 f2i i2f
 
 syntax match lopasmLabel "\w\+:"
 
