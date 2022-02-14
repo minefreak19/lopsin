@@ -113,7 +113,7 @@ LopsinErr lopsin_native_free(LopsinVM *vm)
     return ERR_OK;
 }
 
-// TODO: `time` native gives time in seconds, not milliseconds
+// TODO(#7): `time` native gives time in seconds, not milliseconds
 LopsinErr lopsin_native_time(LopsinVM *vm)
 {
     static_assert(sizeof(time_t) <= sizeof(uint64_t), "Make sure time_t fits in VM stack");
