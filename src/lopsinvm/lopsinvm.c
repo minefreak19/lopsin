@@ -1,6 +1,7 @@
 #include "./lopsinvm.h"
 
 #include <assert.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -443,11 +444,13 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_IDIV: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
         if (vm->dstack[vm->dsp - 1].as_i64 == 0) return ERR_DIV_BY_ZERO;
         BINARY_OP(vm, i64, i64, /);
     } break;
 
     case LOPSIN_INST_IMOD: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
         if (vm->dstack[vm->dsp - 1].as_i64 == 0) return ERR_DIV_BY_ZERO;
         BINARY_OP(vm, i64, i64, %);
     } break;
@@ -469,7 +472,17 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
     } break;
 
     case LOPSIN_INST_FMOD: {
-        // BINARY_OP(vm, f64, f64, %);
+        if (vm->dsp < 2) return ERR_DSTACK_UNDERFLOW;
+
+        double a = vm->dstack[--vm->dsp].as_f64;
+        double b = vm->dstack[--vm->dsp].as_f64;
+
+        double c = fmod(a, b);
+
+        assert(vm->dsp < vm->dstack_cap);
+        vm->dstack[vm->dsp++].as_f64 = c;
+
+        vm->ip++;
     } break;
 
     case LOPSIN_INST_I2F: {

@@ -16,7 +16,7 @@ extern "C"
 #define DEBUG_CXXFLAGS CXXFLAGS, "-ggdb", "-D_DEBUG"
 #define BUILD_CXXFLAGS CXXFLAGS, "-O3"
 
-#define CFLAGS "-std=c11", "-Wall", "-Wextra", "-Werror", "-Wpedantic", "-Wno-missing-braces", "-Wmissing-prototypes", "-static"
+#define CFLAGS "-std=c11", "-Wall", "-Wextra", "-Werror", "-Wpedantic", "-Wno-missing-braces", "-Wmissing-prototypes", "-static", "-lm"
 #define DEBUG_CFLAGS CFLAGS, "-ggdb", "-D_DEBUG"
 #define BUILD_CFLAGS CFLAGS, "-O3"
 

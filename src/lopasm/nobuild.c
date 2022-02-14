@@ -68,11 +68,6 @@ int main(int argc, const char **argv)
 
     }
 
-    FOREACH_ARRAY(Cstr, cflag, cflags, {
-        cmdarr = cstr_array_append(cmdarr, *cflag);
-    });
-
-
     Cstr_Array srcfiles =
 #   ifdef EXTRA_SRCFILES
         cstr_array_make(EXTRA_SRCFILES, NULL);
@@ -91,6 +86,10 @@ int main(int argc, const char **argv)
 
     FOREACH_ARRAY(Cstr, srcfile, srcfiles, {
         cmdarr = cstr_array_append(cmdarr, *srcfile);
+    });
+
+    FOREACH_ARRAY(Cstr, cflag, cflags, {
+        cmdarr = cstr_array_append(cmdarr, *cflag);
     });
 
     Cmd cmd = { cmdarr };
