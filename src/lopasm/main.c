@@ -84,7 +84,7 @@ int main(int argc, const char **argv)
         } else if (cstreq(arg, "--run") || cstreq(arg, "-r")) {
             args.run = true;
         } else {
-            // TODO: lopasm does not support multiple compilation units
+            // TODO(#4): lopasm does not support multiple compilation units
             if (args.input_path != NULL) {
                 usage(stderr, program_name);
                 fprintf(stderr, "ERROR: unrecognised argument `%s`\n", arg);
