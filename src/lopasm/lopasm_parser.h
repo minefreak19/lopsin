@@ -29,7 +29,7 @@ typedef enum {
 } LopAsm_ParserPhase;
 
 #define LOPASM_LABELS_CAP 1024
-// TODO: LopAsm_Parser's internal label list is not dynamically sized
+// TODO(#3): LopAsm_Parser's internal label list is not dynamically sized
 typedef struct {
     LopAsm_Label labels[LOPASM_LABELS_CAP];
     size_t labels_sz;
