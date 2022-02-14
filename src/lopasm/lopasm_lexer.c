@@ -122,7 +122,7 @@ static bool lex_tok_as_inst(Token *tok)
     return false;
 }
 
-// TODOOOO: lopasm has no support for floating point literals
+// TODOOOO(#2): lopasm has no support for floating point literals
 static bool lex_tok_as_i64(Token *tok)
 {
     String_View tok_text = tok->text;
