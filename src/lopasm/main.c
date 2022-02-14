@@ -115,7 +115,7 @@ int main(int argc, const char **argv)
         .data  = input_buf->data,
     };
 
-    // TODO: lopasm has no proper error reporting
+    // TODO(#5): lopasm has no proper error reporting
     LopAsm_Lexer lexer = {
         .loc = {0},
         .source = input,
