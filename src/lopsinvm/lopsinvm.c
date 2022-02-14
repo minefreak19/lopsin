@@ -98,7 +98,7 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
 
     [ERR_ILLEGAL_INST]      = "Illegal instruction",
     [ERR_BAD_INST_PTR]      = "Bad instruction pointer",
-    [ERR_BAD_MEM_PTR]       = "Bad memory pointer",
+    [ERR_BAD_MEM_PTR]       = "Bad memory pointer, likely to memory not allocated by the VM",
     [ERR_NATIVE_ERROR]      = "Miscellaneous error in native process",
     [ERR_OUT_OF_MEMORY]     = "Out of memory",
     [ERR_HALTED]            = "Already halted",

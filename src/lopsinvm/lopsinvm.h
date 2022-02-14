@@ -36,7 +36,6 @@ typedef enum {
 
     ERR_ILLEGAL_INST,
     ERR_BAD_INST_PTR,
-    // TODO(#6): more specialised memory errors
     ERR_BAD_MEM_PTR,
     ERR_OUT_OF_MEMORY,
     ERR_HALTED,
