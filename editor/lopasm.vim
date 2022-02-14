@@ -18,7 +18,7 @@ syntax match lopasmComment "#.*$"
 syntax match lopasmComment ";.*$"
 
 " TODO(#1): vim syntax does not support the character literal '\''
-syntax region lopasmChar start='\'' end='\''
+syntax region lopasmChar start='\'' skip='\\\'' end='\''
 
 highlight default link lopasmKeywords	Statement
 highlight default link lopasmLabel 	Function
