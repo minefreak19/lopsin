@@ -646,7 +646,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 void lopsinvalue_print(FILE *stream, LopsinValue value)
 {
     fprintf(stream, "%"PRId64, value.as_i64);
-    // TODO exhaustive printing
+    // TODO(#9): lopsinvalue_print does not have exhaustive printing
 }
 
 LopsinErr lopsinvm_start(LopsinVM *vm)
