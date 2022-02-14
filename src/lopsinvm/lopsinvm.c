@@ -20,12 +20,12 @@
 #define NATIVES_IMPLEMENTATION
 #include "./natives.h"
 
-static_assert(COUNT_LOPSIN_INST_TYPES == 41, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
+static_assert(COUNT_LOPSIN_INST_TYPES == 54, "Exhaustive definition of LOPSIN_INST_TYPE_NAMES with respect to LopsinInstType's");
 const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_NOP]           = "nop",
     [LOPSIN_INST_HLT]           = "hlt",
 
-    [LOPSIN_INST_PUSH]          = "push",
+    [LOPSIN_INST_PUSH]         = "push",
     [LOPSIN_INST_DROP]          = "drop",
     [LOPSIN_INST_DUP]           = "dup",
     [LOPSIN_INST_SWAP]          = "swap",
@@ -39,11 +39,20 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_W32]           = "!32",
     [LOPSIN_INST_W64]           = "!64",
 
-    [LOPSIN_INST_SUM]           = "sum",
-    [LOPSIN_INST_SUB]           = "sub",
-    [LOPSIN_INST_MUL]           = "mul",
-    [LOPSIN_INST_DIV]           = "div",
-    [LOPSIN_INST_MOD]           = "mod",
+    [LOPSIN_INST_ISUM]          = "isum",
+    [LOPSIN_INST_ISUB]          = "isub",
+    [LOPSIN_INST_IMUL]          = "imul",
+    [LOPSIN_INST_IDIV]          = "idiv",
+    [LOPSIN_INST_IMOD]          = "imod",
+
+    [LOPSIN_INST_FSUM]          = "fsum",
+    [LOPSIN_INST_FSUB]          = "fsub",
+    [LOPSIN_INST_FMUL]          = "fmul",
+    [LOPSIN_INST_FDIV]          = "fdiv",
+    [LOPSIN_INST_FMOD]          = "fmod",
+
+    [LOPSIN_INST_I2F]           = "i2f",
+    [LOPSIN_INST_F2I]           = "f2i",
 
     [LOPSIN_INST_SHL]           = "shl",
     [LOPSIN_INST_SHR]           = "shr",
@@ -55,12 +64,19 @@ const char * const LOPSIN_INST_TYPE_NAMES[COUNT_LOPSIN_INST_TYPES] = {
     [LOPSIN_INST_LAND]          = "land",
     [LOPSIN_INST_LNOT]          = "lnot",
 
-    [LOPSIN_INST_GT]            = "gt",
-    [LOPSIN_INST_LT]            = "lt",
-    [LOPSIN_INST_GTE]           = "gte",
-    [LOPSIN_INST_LTE]           = "lte",
-    [LOPSIN_INST_EQ]            = "eq",
-    [LOPSIN_INST_NEQ]           = "neq",
+    [LOPSIN_INST_IGT]           = "igt",
+    [LOPSIN_INST_ILT]           = "ilt",
+    [LOPSIN_INST_IGTE]          = "igte",
+    [LOPSIN_INST_ILTE]          = "ilte",
+    [LOPSIN_INST_IEQ]           = "ieq",
+    [LOPSIN_INST_INEQ]          = "ineq",
+
+    [LOPSIN_INST_FGT]           = "fgt",
+    [LOPSIN_INST_FLT]           = "flt",
+    [LOPSIN_INST_FGTE]          = "fgte",
+    [LOPSIN_INST_FLTE]          = "flte",
+    [LOPSIN_INST_FEQ]           = "feq",
+    [LOPSIN_INST_FNEQ]          = "fneq",
 
     [LOPSIN_INST_JMP]           = "jmp",
     [LOPSIN_INST_CJMP]          = "cjmp",
@@ -94,9 +110,10 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
 
 #define NATIVE(x) { .name = #x, .proc = &lopsin_native_##x }
 
-static_assert(COUNT_LOPSIN_NATIVES == 6, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
+static_assert(COUNT_LOPSIN_NATIVES == 7, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
 const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
     [LOPSIN_NATIVE_PUTI]   = NATIVE(puti),
+    [LOPSIN_NATIVE_PUTF]   = NATIVE(putf),
     [LOPSIN_NATIVE_PUTC]   = NATIVE(putc),
     [LOPSIN_NATIVE_READ]   = NATIVE(read),
     [LOPSIN_NATIVE_MALLOC] = NATIVE(malloc),
@@ -125,16 +142,23 @@ static void lopvm_dump_stack(FILE *stream, const LopsinVM *vm)
 
 bool requires_operand(LopsinInstType insttype)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 41, "Exhaustive handling of LopsinInstType's in requires_operand");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 54, "Exhaustive handling of LopsinInstType's in requires_operand");
 
     switch (insttype) {
     case LOPSIN_INST_NOP:
     case LOPSIN_INST_HLT:
-    case LOPSIN_INST_SUM:
-    case LOPSIN_INST_SUB:
-    case LOPSIN_INST_MUL:
-    case LOPSIN_INST_DIV:
-    case LOPSIN_INST_MOD:
+    case LOPSIN_INST_ISUM:
+    case LOPSIN_INST_ISUB:
+    case LOPSIN_INST_IMUL:
+    case LOPSIN_INST_IDIV:
+    case LOPSIN_INST_IMOD:
+    case LOPSIN_INST_FSUM:
+    case LOPSIN_INST_FSUB:
+    case LOPSIN_INST_FMUL:
+    case LOPSIN_INST_FDIV:
+    case LOPSIN_INST_FMOD:
+    case LOPSIN_INST_I2F:
+    case LOPSIN_INST_F2I:
     case LOPSIN_INST_SHL:
     case LOPSIN_INST_SHR:
     case LOPSIN_INST_BOR:
@@ -144,12 +168,18 @@ bool requires_operand(LopsinInstType insttype)
     case LOPSIN_INST_LOR:
     case LOPSIN_INST_LAND:
     case LOPSIN_INST_LNOT:
-    case LOPSIN_INST_GT:
-    case LOPSIN_INST_LT:
-    case LOPSIN_INST_GTE:
-    case LOPSIN_INST_LTE:
-    case LOPSIN_INST_EQ:
-    case LOPSIN_INST_NEQ:
+    case LOPSIN_INST_IGT:
+    case LOPSIN_INST_ILT:
+    case LOPSIN_INST_IGTE:
+    case LOPSIN_INST_ILTE:
+    case LOPSIN_INST_IEQ:
+    case LOPSIN_INST_INEQ:
+    case LOPSIN_INST_FGT:
+    case LOPSIN_INST_FLT:
+    case LOPSIN_INST_FGTE:
+    case LOPSIN_INST_FLTE:
+    case LOPSIN_INST_FEQ:
+    case LOPSIN_INST_FNEQ:
     case LOPSIN_INST_RET:
     case LOPSIN_INST_R8:
     case LOPSIN_INST_R16:
@@ -207,7 +237,7 @@ static bool lopsinvm_chkmem(LopsinVM *vm, void *memptr, Mem_Chunk *out)
 
 LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 {
-    static_assert(COUNT_LOPSIN_INST_TYPES == 41, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
+    static_assert(COUNT_LOPSIN_INST_TYPES == 54, "Exhaustive handling of LopsinInstType's in lopsinvm_run_inst()");
 
     if (!vm->running) {
         return ERR_HALTED;
@@ -400,26 +430,58 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         vm->ip++;
     } break;
 
-    case LOPSIN_INST_SUM: {
+    case LOPSIN_INST_ISUM: {
         BINARY_OP(vm, i64, i64, +);
     } break;
 
-    case LOPSIN_INST_SUB: {
+    case LOPSIN_INST_ISUB: {
         BINARY_OP(vm, i64, i64, -);
     } break;
 
-    case LOPSIN_INST_MUL: {
+    case LOPSIN_INST_IMUL: {
         BINARY_OP(vm, i64, i64, *);
     } break;
 
-    case LOPSIN_INST_DIV: {
+    case LOPSIN_INST_IDIV: {
         if (vm->dstack[vm->dsp - 1].as_i64 == 0) return ERR_DIV_BY_ZERO;
         BINARY_OP(vm, i64, i64, /);
     } break;
 
-    case LOPSIN_INST_MOD: {
+    case LOPSIN_INST_IMOD: {
         if (vm->dstack[vm->dsp - 1].as_i64 == 0) return ERR_DIV_BY_ZERO;
         BINARY_OP(vm, i64, i64, %);
+    } break;
+
+    case LOPSIN_INST_FSUM: {
+        BINARY_OP(vm, f64, f64, +);
+    } break;
+
+    case LOPSIN_INST_FSUB: {
+        BINARY_OP(vm, f64, f64, -);
+    } break;
+
+    case LOPSIN_INST_FMUL: {
+        BINARY_OP(vm, f64, f64, *);
+    } break;
+
+    case LOPSIN_INST_FDIV: {
+        BINARY_OP(vm, f64, f64, /);
+    } break;
+
+    case LOPSIN_INST_FMOD: {
+        // BINARY_OP(vm, f64, f64, %);
+    } break;
+
+    case LOPSIN_INST_I2F: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        vm->dstack[vm->dsp - 1].as_f64 = (double)vm->dstack[vm->dsp - 1].as_i64;
+        vm->ip++;
+    } break;
+
+    case LOPSIN_INST_F2I: {
+        if (vm->dsp < 1) return ERR_DSTACK_UNDERFLOW;
+        vm->dstack[vm->dsp - 1].as_i64 = (int64_t)vm->dstack[vm->dsp - 1].as_f64;
+        vm->ip++;
     } break;
 
     case LOPSIN_INST_SHL: {
@@ -464,28 +526,52 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
         vm->ip++;
     } break;
 
-    case LOPSIN_INST_GT: {
+    case LOPSIN_INST_IGT: {
         BINARY_OP(vm, i64, boolean, >);
     } break;
 
-    case LOPSIN_INST_LT: {
+    case LOPSIN_INST_ILT: {
         BINARY_OP(vm, i64, boolean, <);
     } break;
 
-    case LOPSIN_INST_GTE: {
+    case LOPSIN_INST_IGTE: {
         BINARY_OP(vm, i64, boolean, >=);
     } break;
 
-    case LOPSIN_INST_LTE: {
+    case LOPSIN_INST_ILTE: {
         BINARY_OP(vm, i64, boolean, <=);
     } break;
 
-    case LOPSIN_INST_EQ: {
+    case LOPSIN_INST_IEQ: {
         BINARY_OP(vm, i64, boolean, ==);
     } break;
 
-    case LOPSIN_INST_NEQ: {
+    case LOPSIN_INST_INEQ: {
         BINARY_OP(vm, i64, boolean, !=);
+    } break;
+
+    case LOPSIN_INST_FGT: {
+        BINARY_OP(vm, f64, boolean, >);
+    } break;
+
+    case LOPSIN_INST_FLT: {
+        BINARY_OP(vm, f64, boolean, <);
+    } break;
+
+    case LOPSIN_INST_FGTE: {
+        BINARY_OP(vm, f64, boolean, >=);
+    } break;
+
+    case LOPSIN_INST_FLTE: {
+        BINARY_OP(vm, f64, boolean, <=);
+    } break;
+
+    case LOPSIN_INST_FEQ: {
+        BINARY_OP(vm, f64, boolean, ==);
+    } break;
+
+    case LOPSIN_INST_FNEQ: {
+        BINARY_OP(vm, f64, boolean, !=);
     } break;
 
     case LOPSIN_INST_JMP: {

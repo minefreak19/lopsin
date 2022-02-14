@@ -27,13 +27,13 @@ main:
 main.loop:
 	swap 1
 	ncall read
-	sum
+	isum
 	swap 1
 
 	push 1
-	sub
+	isub
 	dup  1
-	push 0 gt
+	push 0 igt
 	cjmp main.loop
 
 	push '\0'
@@ -50,8 +50,10 @@ main.loop:
 
 	drop 1
 	swap 1
-	div
-	ncall puti
+
+	i2f swap 1 i2f swap 1
+	fdiv
+	ncall putf
 	push '\n' ncall putc
 
 	ret
