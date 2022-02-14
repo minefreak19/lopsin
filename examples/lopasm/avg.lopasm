@@ -19,6 +19,46 @@ main:
 	push 'N'
 	call putcstr
 	ncall read
+	dup 1 
+	push 0
+	igt
+	cjmp main.n_ok
+	
+	push '\0'
+	push '\n'
+	push 'e'
+	push 'v'
+	push 'i'
+	push 't'
+	push 'i'
+	push 's'
+	push 'o'
+	push 'p'
+	push 32
+	push 'e'
+	push 'b'
+	push 32
+	push 't'
+	push 's'
+	push 'u'
+	push 'm'
+	push 32
+	push 't'
+	push 'u'
+	push 'p'
+	push 'n'
+	push 'I'
+	push 32
+	push ':'
+	push 'R'
+	push 'O'
+	push 'R'
+	push 'R'
+	push 'E'
+	call putcstr
+	ret
+
+main.n_ok:
 	dup 1
 
 	push 0 // sum
