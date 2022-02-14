@@ -253,7 +253,7 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
         fprintf(stdout, "Current instruction: %s ",
             LOPSIN_INST_TYPE_NAMES[inst.type]);
-        lopsinvalue_print(stdout, inst.operand);
+        fprintf(stdout, "%"PRId64, inst.operand.as_i64);
         fprintf(stdout, "\n");
         fprintf(stdout, "==============================\n");
     }
@@ -645,8 +645,10 @@ LopsinErr lopsinvm_run_inst(LopsinVM *vm)
 
 void lopsinvalue_print(FILE *stream, LopsinValue value)
 {
-    fprintf(stream, "%"PRId64, value.as_i64);
-    // TODO(#9): lopsinvalue_print does not have exhaustive printing
+    fprintf(stream, "%"PRId64"\t%lf\t%p",
+                    value.as_i64,
+                    value.as_f64,
+                    value.as_ptr);
 }
 
 LopsinErr lopsinvm_start(LopsinVM *vm)
