@@ -121,7 +121,7 @@ int main(int argc, const char **argv)
         .source = input,
     };
 
-    LopAsm_Parser *parser = new_parser();
+    LopAsm_Parser *parser = lopasm_parser_new();
     LopAsm_Token tok = {0};
 
     bool success;

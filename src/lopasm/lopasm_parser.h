@@ -45,7 +45,7 @@ typedef struct {
 } LopAsm_Parser;
 
 void lopasm_parser_next_phase(LopAsm_Parser *parser);
-LopAsm_Parser *new_parser(void);
+LopAsm_Parser *lopasm_parser_new(void);
 bool lopasm_parser_spit_inst(LopAsm_Parser *parser, LopsinInst *out);
 bool lopasm_parser_accept_token(LopAsm_Parser *parser, LopAsm_Token token);
 void lopasm_parser_free(LopAsm_Parser *parser);

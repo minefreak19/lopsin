@@ -193,7 +193,7 @@ static void populate_hardcoded_labels(Parser *parser)
 }
 
 #define LOPASM_PARSER_INITIAL_TOKENS_CAP 1024
-LopAsm_Parser *new_parser(void)
+LopAsm_Parser *lopasm_parser_new(void)
 {
     Parser *parser = NOTNULL(malloc(sizeof(Parser)));
     *parser = (Parser) {
