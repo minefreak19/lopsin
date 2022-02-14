@@ -196,6 +196,7 @@ bool lopasm_lexer_spit_token(Lexer *lexer, Token *out)
 
     Token result;
 
+    // TODO(#8): LopAsm_Lexer can't handle the `' '` char literal
     result.text = sv_chop_by_whitespace(&lexer->source);
 
     if (result.text.count == 0) {
