@@ -117,6 +117,7 @@ typedef enum {
 } LopsinInstType;
 
 typedef enum {
+    LOPSIN_NATIVE_PUTX,
     LOPSIN_NATIVE_PUTI,
     LOPSIN_NATIVE_PUTF,
     LOPSIN_NATIVE_PUTC,

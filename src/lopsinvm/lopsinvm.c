@@ -111,8 +111,9 @@ const char * const LOPSIN_ERR_NAMES[COUNT_LOPSIN_ERRS] = {
 
 #define NATIVE(x) { .name = #x, .proc = &lopsin_native_##x }
 
-static_assert(COUNT_LOPSIN_NATIVES == 7, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
+static_assert(COUNT_LOPSIN_NATIVES == 8, "Exhaustive definition of LOPSIN_NATIVES[] with respect to LopsinNativeType's");
 const LopsinNative LOPSIN_NATIVES[COUNT_LOPSIN_NATIVES] = {
+    [LOPSIN_NATIVE_PUTX]   = NATIVE(putx),
     [LOPSIN_NATIVE_PUTI]   = NATIVE(puti),
     [LOPSIN_NATIVE_PUTF]   = NATIVE(putf),
     [LOPSIN_NATIVE_PUTC]   = NATIVE(putc),
