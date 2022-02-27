@@ -38,49 +38,6 @@ void build_module(Mode mode, const char *module)
         }
     }
     CMD(module_nobuild, mode == MODE_BUILD ? "build" : "debug");
-
-    // Cstr_Array compile_cmd_arr = {0};
-
-    // compile_cmd_arr = cstr_array_append(compile_cmd_arr, CC);
-    // compile_cmd_arr = cstr_array_append(compile_cmd_arr, "-o");
-    // compile_cmd_arr = cstr_array_append(compile_cmd_arr, PATH(BINDIR, module));
-
-    // Cstr srcpath = PATH(SRCDIR, module);
-    // Cstr_Array srcfiles = {0};
-    // FOREACH_FILE_IN_DIR(srcfile, srcpath, {
-    //     if (!(IS_DIR(srcfile))
-    //       && (ENDS_WITH(srcfile, ".c")))
-    //     {
-    //         srcfiles = cstr_array_append(srcfiles, PATH(srcpath, srcfile));
-    //     }
-    // });
-
-    // if (srcfiles.count == 0) {
-    //     INFO("No source files found in directory %s. Moving on...", srcpath);
-    //     return;
-    // }
-
-    // FOREACH_ARRAY(Cstr, srcfile, srcfiles, {
-    //     compile_cmd_arr = cstr_array_append(compile_cmd_arr, *srcfile);
-    // });
-
-    // Cstr_Array cflags;
-    // switch (mode) {
-    //     case MODE_BUILD: cflags = cstr_array_make(BUILD_CFLAGS, C_INCLUDES, NULL); break;
-    //     case MODE_DEBUG: cflags = cstr_array_make(DEBUG_CFLAGS, C_INCLUDES, NULL); break;
-
-    //     default: {
-    //         PANIC("ERROR: Invalid mode");
-    //     }
-    // }
-
-    // FOREACH_ARRAY(Cstr, cflag, cflags, {
-    //     compile_cmd_arr = cstr_array_append(compile_cmd_arr, *cflag);
-    // });
-
-    // Cmd compile_cmd = { compile_cmd_arr };
-    // INFO("CMD: %s", cmd_show(compile_cmd));
-    // cmd_run_sync(compile_cmd);
 }
 
 void ensure_dirs(void)
